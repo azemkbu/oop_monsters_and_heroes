@@ -6,6 +6,120 @@
 - Student ID: U51216906
 
 
+## File Structure 
+
+```text
+/battle/engine
+  BattleEngine.java              // Interface defining the contract for executing battles
+  BattleEngineImpl.java          // Implementation of the battle engine handling battle flow
+
+/battle/enums
+  EquipChoice.java               // Enum representing possible equipment choices
+  HeroActionType.java            // Enum representing available hero actions during battle
+
+/battle/heroAction
+  HeroActionStrategy.java        // Strategy interface representing a hero’s chosen action logic
+  BattleActionsConfig.java       // Configuration class mapping action types to strategies
+  BattleContext.java             // Context class containing shared state for ongoing battles
+
+/battle/heroAction/impl
+  AttackAction.java              // Strategy implementing an attack action
+  CastSpellAction.java           // Strategy implementing spell-casting behavior for heroes
+  EquipAction.java               // Strategy allowing heroes to equip weapons or armor in battle
+  UsePotionAction.java           // Strategy allowing heroes to consume potions during battle
+
+/battle/menu
+  BattleMenu.java                // Interface defining battle-related UI display operations
+  BattleMenuImpl.java            // Implementation of BattleMenu interface
+
+/game
+  Game.java                      // Interface defining main game methods
+  GameCommand.java               // Enum mapping keyboard commands to game actions
+  GameImpl.java                  // Implementation of core game logic
+  GameLauncher.java              // Entry class responsible for loading resources and starting the game
+
+/hero/enums
+  HeroSkill.java                 // Enum representing hero skill categories
+  HeroType.java                  // Enum representing hero types
+
+/hero
+  Hero.java                      // Abstract base class defining shared hero attributes and behavior
+  Inventory.java                 // Class managing a hero’s inventory
+  Paladin.java                   // Subclass of Hero representing the Paladin hero type
+  Party.java                     // Class representing the player's active group of heroes
+  Sorcerer.java                  // Subclass of Hero representing the Sorcerer hero type
+  Wallet.java                    // Class representing a hero’s gold amount 
+  Warrior.java                   // Subclass of Hero representing the Warrior hero type
+
+/market/command
+  MarketAction.java              // Enum representing available market menu operations
+  MarketCommand.java             // Command interface defining a market action executable by a hero
+  MarketCommandConfig.java       // Configuration mapping MarketAction values to command implementations
+
+/market/model
+  Market.java                    // Class representing a market and its available items
+
+/market/model/item
+  Armor.java                     // Subclass of Item representing defensive armor
+  Item.java                      // Abstract base class representing a generic market item
+  ItemType.java                  // Enum defining item categories
+  Potion.java                    // Subclass of Item representing a consumable potion
+  Spell.java                     // Subclass of Item representing castable magical spells
+  SpellType.java                 // Enum defining categories of spells
+  StatType.java                  // Enum representing hero statistics affected by items
+  Weapon.java                    // Subclass of Item representing weapon
+
+/market/service
+  MarketFactory.java             // Factory class responsible for constructing Market instances
+  MarketService.java             // Interface defining market operations
+  MarketServiceImpl.java         // Implementation of business logic for market operations
+
+/market/ui
+  MarketMenu.java                // Interface defining display operations for the market UI
+  MarketMenuImpl.java            // Console implementation of the market interaction menu
+
+/monster/enums
+  MonsterAttribute.java          // Enum representing monster attributes
+
+/monster
+  Dragon.java                    // Subclass of Monster representing a Dragon 
+  Exoskeleton.java               // Subclass of Monster representing an Exoskeleton 
+  Monster.java                   // Abstract base class defining core monster attributes and behavior
+  MonsterFactory.java            // Factory class generating monsters for battles
+  Spirit.java                    // Subclass of Monster representing a Spirit
+
+/upload/base
+  GenericFileLoader.java         // Generic loader for building objects from uploaded text files
+  LineMapper.java                // Functional mapper converting a text line into an object
+  TextFileUtils.java             // Utility class for reading and parsing text files
+
+/upload
+  ArmorFileLoader.java           // Loader class for constructing Armor objects from file data
+  HeroFileLoader.java            // Loader class for constructing Hero objects from file data
+  MonsterFileLoader.java         // Loader class for constructing Monster objects from file data
+  PotionFileLoader.java          // Loader class for constructing Potion objects from file data
+  SpellFileLoader.java           // Loader class for constructing Spell objects from file data
+  WeaponFileLoader.java          // Loader class for constructing Weapon objects from file data
+
+/utils
+  ConsoleColors.java             // ANSI color definitions enabling styled console output
+  ConsoleIOUtils.java            // Implementation of IOUtils interface
+  GameConstants.java             // Centralized constants for game 
+  IOUtils.java                   // Utility interface for handling generic input/output operations
+  MessageUtils.java              // Repository for centralized UI text messages
+
+/worldMap/enums
+  Direction.java                 // Enum representing movement directions on the world map
+  TileType.java                  // Enum defining categories of map tiles
+
+/worldMap
+  MarketTileFeature.java         // Feature class marking a tile as containing a market
+  Tile.java                      // Class representing a single grid cell of the world map
+  TileFeature.java               // Abstract base class for map tile features
+  WorldMap.java                  // Class responsible for generating and managing the game map
+```
+
+
 ## Design Decisions 
 
 * **Strong Object-Oriented Architecture**
