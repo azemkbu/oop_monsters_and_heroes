@@ -46,11 +46,26 @@ public final class GameConstants {
     public static final int MARKET_MENU_MAX_OPTION = 4;
 
 
-    // World Map
+    // World Map (Monsters and Heroes)
     public static final double WORLD_MAP_INACCESSIBLE_RATIO = 0.20;
     public static final double WORLD_MAP_MARKET_RATIO = 0.30;
     public static final double WORLD_MAP_COMMON_RATIO = 0.50;
     public static final Integer WORLD_MAP_SIZE = 8;
+
+    // Legends of Valor Map
+    public static final int LOV_MAP_SIZE = 8;
+    public static final int LOV_NUM_LANES = 3;
+    public static final int LOV_HEROES_PER_TEAM = 3;
+    public static final double LOV_TERRAIN_BONUS_MULTIPLIER = 0.10;  // 10% stat bonus
+    public static final double LOV_BUSH_RATIO = 0.20;   // 20% Bush tiles
+    public static final double LOV_CAVE_RATIO = 0.20;   // 20% Cave tiles
+    public static final double LOV_KOULOU_RATIO = 0.20; // 20% Koulou tiles
+    public static final double LOV_PLAIN_RATIO = 0.40;  // 40% Plain tiles
+
+    // Legends of Valor Game Rules
+    public static final int LOV_MONSTER_SPAWN_INTERVAL = 8;  // Spawn new monsters every N rounds
+    public static final int LOV_GOLD_PER_MONSTER_LEVEL = 500; // Gold dropped by monsters
+    public static final int LOV_EXP_PER_MONSTER = 2;          // Experience per monster kill
 
     //Data upload
     public static final String BASE_DIR_TO_UPLOAD_FILES = "files";
