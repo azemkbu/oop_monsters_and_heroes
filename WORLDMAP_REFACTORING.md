@@ -381,6 +381,140 @@ if (roundNumber % MONSTER_SPAWN_INTERVAL == 0) {
 
 ---
 
+## ⚠️ Important Notes
+
+### Original Hero/Monster Functionality Preserved
+
+All original functionality of `Hero` and `Monster` classes is **100% preserved**:
+
+| Hero Methods (Unchanged) | Monster Methods (Unchanged) |
+|--------------------------|----------------------------|
+| `takeDamage()` | `takeDamage()` |
+| `gainExperience()` / `levelUp()` | `computeAttackDamage()` |
+| `dodgesAttack()` | `dodgesAttack()` |
+| `recoverAfterRound()` | `getDodgeChance()` |
+| `equipWeapon()` / `equipArmor()` | `getFavoredAttributes()` |
+| `getInventory()` / `addItem()` / `removeItem()` | `isAlive()` |
+| `getGold()` / `addGold()` / `spendGold()` | |
+
+The `GamePiece` implementation is **purely additive** - only added:
+- `row`, `col` fields
+- `getRow()`, `getCol()`, `setPosition()` methods
+- `isHero()` / `isMonster()` override
+
+---
+
+## 💡 Tips for BattleEngine Design
+
+### 1. Use Terrain Bonuses Elegantly
+
+```java
+// DON'T do this (old way, error-prone):
+tile.applyEffect(hero);  // Modifies hero stats
+// ... battle logic ...
+tile.removeEffect(hero); // Easy to forget or get wrong
+
+// DO this (new query-based way):
+public int getEffectiveStrength(Hero hero, LegendsOfValorWorldMap world) {
+    int[] pos = world.getHeroPosition(hero);
+    Tile tile = world.getTile(pos[0], pos[1]);
+    return (int)(hero.getStrength() * tile.getStrengthMultiplier());
+}
+```
+
+### 2. Leverage GamePiece for Unified Combat Logic
+
+```java
+// Instead of separate methods:
+// void attackHero(Monster attacker, Hero target) { ... }
+// void attackMonster(Hero attacker, Monster target) { ... }
+
+// Use polymorphism:
+void attack(GamePiece attacker, GamePiece target) {
+    if (!isInRange(attacker, target)) {
+        io.printlnFail("Target not in range!");
+        return;
+    }
+    
+    int damage = calculateDamage(attacker);
+    applyDamage(target, damage);
+}
+```
+
+### 3. Use Range Queries for Target Selection
+
+```java
+// Hero selecting attack target:
+List<Monster> targets = world.getMonstersInRange(hero);
+if (targets.isEmpty()) {
+    io.printlnFail("No monsters in range!");
+} else {
+    // Show menu to select target
+    Monster selected = showTargetMenu(targets);
+    performAttack(hero, selected);
+}
+```
+
+### 4. Utilize Position Sync for Accurate State
+
+```java
+// Position is synced in both WorldMap tracking and GamePiece itself:
+world.moveHero(hero, Direction.UP);
+
+// Now both are accurate:
+int[] mapPos = world.getHeroPosition(hero);  // From WorldMap tracking
+int heroRow = hero.getRow();                  // From GamePiece interface
+// mapPos[0] == heroRow  ✓
+
+// Use whichever is more convenient in your code!
+```
+
+### 5. Clean Victory Check Pattern
+
+```java
+public void afterEachTurn() {
+    // Check after every hero/monster action
+    if (world.isHeroVictory()) {
+        endGame(true, "Heroes reached the Monster Nexus!");
+    }
+    if (world.isMonsterVictory()) {
+        endGame(false, "Monsters reached the Hero Nexus!");
+    }
+}
+```
+
+### 6. Monster AI Made Simple
+
+```java
+public void monsterTurn(Monster monster) {
+    List<Hero> targets = world.getHeroesInRange(monster);
+    
+    if (!targets.isEmpty()) {
+        // Attack the first hero in range
+        Hero victim = targets.get(0);
+        int damage = monster.computeAttackDamage();
+        victim.takeDamage(damage);
+    } else {
+        // No hero in range - move south toward their nexus
+        world.moveMonsterSouth(monster);
+    }
+}
+```
+
+---
+
+## Summary of Changes
+
+| Category | What Changed | Benefit |
+|----------|--------------|---------|
+| **Architecture** | Added `IWorldMap` interface | Supports both game modes |
+| **Entity Tracking** | Added `GamePiece` interface | Unified Hero/Monster management |
+| **Terrain Effects** | Changed to query-based | Fixed bug, cleaner code |
+| **Position Sync** | Dual tracking (Map + GamePiece) | Flexibility in BattleEngine |
+| **Backward Compat** | `WorldMap` extends new class | Original game still works |
+
+---
+
 ## Questions?
 
 Feel free to reach out if you have any questions about the implementation or need any changes!
