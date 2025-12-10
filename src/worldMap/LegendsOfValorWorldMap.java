@@ -718,7 +718,7 @@ public class LegendsOfValorWorldMap implements IWorldMap {
         ioUtils.printlnTitle("  " + BG_CYAN + BLACK + " N " + RESET + " = Nexus (spawn/market)");
         ioUtils.printlnTitle("  " + BG_RED + WHITE + " I " + RESET + " = Inaccessible (wall)");
         ioUtils.printlnTitle("  " + BG_GREEN + BLACK + " B " + RESET + " = Bush (+10% Dexterity)");
-        ioUtils.printlnTitle("  " + BG_BLUE + WHITE + " C " + RESET + " = Cave (+10% Agility)");
+        ioUtils.printlnTitle("  " + BG_BLUE + WHITE + " V " + RESET + " = Cave (+10% Agility)");
         ioUtils.printlnTitle("  " + BG_YELLOW + BLACK + " K " + RESET + " = Koulou (+10% Strength)");
         ioUtils.printlnTitle("  " + BG_WHITE + BLACK + " O " + RESET + " = Obstacle (removable)");
         ioUtils.printlnTitle("  " + BG_BLACK + WHITE + " P " + RESET + " = Plain (no effect)");

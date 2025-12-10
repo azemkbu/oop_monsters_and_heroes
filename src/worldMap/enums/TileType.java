@@ -13,7 +13,7 @@ public enum TileType {
     NEXUS("N", "Nexus - Spawn point and market for heroes"),
     PLAIN("P", "Plain - No special effects"),
     BUSH("B", "Bush - Increases dexterity by 10%"),
-    CAVE("C", "Cave - Increases agility by 10%"),
+    CAVE("V", "Cave - Increases agility by 10%"),  // "V" for caVe (avoids collision with COMMON's "C")
     KOULOU("K", "Koulou - Increases strength by 10%"),
     OBSTACLE("O", "Obstacle - Can be removed by hero");
 
