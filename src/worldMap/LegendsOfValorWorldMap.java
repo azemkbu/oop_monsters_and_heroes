@@ -1,5 +1,6 @@
 package worldMap;
 
+import entity.GamePiece;
 import hero.Hero;
 import hero.Party;
 import market.model.Market;
@@ -33,32 +34,23 @@ import static utils.ConsoleColors.*;
  * 
  * ==================== DESIGN CHANGE LOG ====================
  * 
- * ADDED: Entity Management
+ * ENTITY MANAGEMENT WITH GAMEPIECE INTERFACE
  * 
- * PREVIOUS DESIGN:
- * - World only managed tiles, not entities (heroes/monsters)
- * - Entity positions managed externally (e.g., in BattleEngine)
- * - Required passing position info around, hard to query "who is at (row, col)?"
+ * DESIGN PRINCIPLES:
+ * 1. Hero and Monster both implement GamePiece interface
+ * 2. Unified position tracking via GamePiece.setPosition()/getRow()/getCol()
+ * 3. WorldMap maintains position Maps for O(1) lookups
+ * 4. GamePiece position fields sync with Map entries
  * 
- * PROBLEMS:
- * 1. LOV requires frequent position queries:
- *    - "Is there a hero/monster at this position?" (for movement validation)
- *    - "Which enemies are in attack range?" (for combat)
- *    - "Can hero move behind this monster?" (movement rules)
- * 2. External management means every class needs to track positions separately
- * 3. No single source of truth for entity locations
- * 
- * NEW DESIGN (following LOV reference project):
- * - World manages both tiles AND entity positions
- * - Uses Map<Hero, int[]> and Map<Monster, int[]> for position tracking
- * - Provides query methods: getHeroAt(row, col), getMonsterAt(row, col)
- * - Provides range queries: getMonstersInRange(hero), getHeroesInRange(monster)
- * - Single source of truth for all entity locations
+ * KEY METHODS:
+ * - getPieceAt(row, col): Returns any GamePiece at position (unified query)
+ * - getHeroAt(row, col): Returns Hero at position
+ * - getMonsterAt(row, col): Returns Monster at position
  * 
  * BENEFITS:
- * 1. Easy position queries for combat and movement validation
- * 2. Centralized entity management - no duplicate tracking
- * 3. World can enforce movement rules (can't move behind monster, etc.)
+ * - Dependency Inversion: Can operate on GamePiece interface
+ * - Single Responsibility: WorldMap manages positions, pieces manage their own state
+ * - Open/Closed: Easy to add new piece types that implement GamePiece
  * 
  * ===========================================================
  */
@@ -135,11 +127,45 @@ public class LegendsOfValorWorldMap implements IWorldMap {
         generateLayout();
     }
 
+    // ==================== UNIFIED GAMEPIECE QUERY ====================
+
+    /**
+     * Gets any GamePiece (Hero or Monster) at the specified position.
+     * This is the unified query method for all game pieces.
+     * 
+     * Uses GamePiece interface for polymorphic access.
+     * 
+     * @param row the row
+     * @param col the column
+     * @return the GamePiece at that position, or null if none
+     */
+    public GamePiece getPieceAt(int row, int col) {
+        Hero hero = getHeroAt(row, col);
+        if (hero != null) return hero;
+        
+        Monster monster = getMonsterAt(row, col);
+        if (monster != null) return monster;
+        
+        return null;
+    }
+
+    /**
+     * Checks if any piece is at the specified position.
+     * @param row the row
+     * @param col the column
+     * @return true if a piece is at the position
+     */
+    public boolean hasPieceAt(int row, int col) {
+        return getPieceAt(row, col) != null;
+    }
+
     // ==================== HERO MANAGEMENT ====================
 
     /**
      * Places a hero at their starting position (Hero Nexus).
      * Heroes spawn in the left column of their lane.
+     * 
+     * Also updates the Hero's position via GamePiece interface.
      * 
      * @param hero The hero to place
      * @param lane The lane to place them in (0=top, 1=mid, 2=bot)
@@ -149,6 +175,7 @@ public class LegendsOfValorWorldMap implements IWorldMap {
         int col = LANE_COLUMNS[lane][0]; // Left column of lane
         
         heroPositions.put(hero, new int[]{row, col});
+        hero.setPosition(row, col);  // Sync GamePiece position
         heroLanes.put(hero, lane);
         
         if (!heroes.contains(hero)) {
@@ -247,8 +274,9 @@ public class LegendsOfValorWorldMap implements IWorldMap {
             }
         }
 
-        // Update position
+        // Update position (both Map and GamePiece)
         heroPositions.put(hero, new int[]{newRow, newCol});
+        hero.setPosition(newRow, newCol);  // Sync GamePiece position
         return true;
     }
 
@@ -301,8 +329,9 @@ public class LegendsOfValorWorldMap implements IWorldMap {
                 if (getHeroAt(row, col) == null && getMonsterAt(row, col) == null) {
                     Tile destTile = getTile(row, col);
                     if (destTile.isAccessible() && isAdjacent(targetPos[0], targetPos[1], row, col)) {
-                        // Valid teleport destination
+                        // Valid teleport destination (update both Map and GamePiece)
                         heroPositions.put(hero, new int[]{row, col});
+                        hero.setPosition(row, col);  // Sync GamePiece position
                         return true;
                     }
                 }
@@ -328,6 +357,8 @@ public class LegendsOfValorWorldMap implements IWorldMap {
      * Spawns a monster at the Monster Nexus.
      * Monsters spawn in the right column of their lane.
      * 
+     * Also updates the Monster's position via GamePiece interface.
+     * 
      * @param monster the monster to spawn
      * @param lane the lane to spawn in (0=top, 1=mid, 2=bot)
      */
@@ -336,6 +367,7 @@ public class LegendsOfValorWorldMap implements IWorldMap {
         int col = LANE_COLUMNS[lane][1]; // Right column of lane
         
         monsterPositions.put(monster, new int[]{row, col});
+        monster.setPosition(row, col);  // Sync GamePiece position
         if (!monsters.contains(monster)) {
             monsters.add(monster);
         }
@@ -408,7 +440,9 @@ public class LegendsOfValorWorldMap implements IWorldMap {
         // Check if another monster is there
         if (getMonsterAt(newRow, col) != null) return false;
 
+        // Update position (both Map and GamePiece)
         monsterPositions.put(monster, new int[]{newRow, col});
+        monster.setPosition(newRow, col);  // Sync GamePiece position
         return true;
     }
 

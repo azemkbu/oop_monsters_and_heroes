@@ -22,6 +22,7 @@ This document describes the WorldMap refactoring work for the Legends of Valor e
 
 | File | Description |
 |------|-------------|
+| `src/entity/GamePiece.java` | **NEW** Interface for all game pieces (Hero, Monster) |
 | `src/worldMap/IWorldMap.java` | Interface defining contract for all world maps |
 | `src/worldMap/MonstersAndHeroesWorldMap.java` | Original game map implementation (8x8 random tiles) |
 | `src/worldMap/LegendsOfValorWorldMap.java` | LOV game map (8x8, 3 lanes, entity management) |
@@ -35,6 +36,8 @@ This document describes the WorldMap refactoring work for the Legends of Valor e
 
 | File | Changes |
 |------|---------|
+| `src/hero/Hero.java` | **NEW** Implements GamePiece interface (position tracking) |
+| `src/monster/Monster.java` | **NEW** Implements GamePiece interface (position tracking) |
 | `src/worldMap/WorldMap.java` | Now extends MonstersAndHeroesWorldMap (backward compatible) |
 | `src/worldMap/Tile.java` | Added query-based terrain bonus methods |
 | `src/worldMap/TileFeature.java` | Changed to query-based design |
@@ -120,7 +123,57 @@ int effectiveDex = (int)(hero.getDexterity() * tile.getDexterityMultiplier());
 
 ---
 
-## Entity Management (NEW)
+## GamePiece Interface (NEW)
+
+A unified interface for all game pieces (Hero and Monster):
+
+```java
+public interface GamePiece {
+    String getName();
+    boolean isAlive();
+    
+    // Position tracking
+    int getRow();
+    int getCol();
+    void setPosition(int row, int col);
+    
+    // Type checking
+    default boolean isHero() { return false; }
+    default boolean isMonster() { return false; }
+}
+```
+
+### Design Principles Applied
+
+| Principle | How Applied |
+|-----------|-------------|
+| **Interface Segregation** | Only essential position/status methods defined |
+| **Dependency Inversion** | WorldMap depends on GamePiece abstraction |
+| **Open/Closed** | New piece types just implement GamePiece |
+| **Polymorphism** | Unified `getPieceAt()` method works for all |
+
+### Changes to Hero and Monster
+
+Both classes now:
+1. `implements GamePiece`
+2. Have `row` and `col` fields for position
+3. Override `isHero()` or `isMonster()` to return `true`
+
+```java
+// Hero.java
+public abstract class Hero implements GamePiece {
+    private int row, col;
+    
+    @Override public int getRow() { return row; }
+    @Override public int getCol() { return col; }
+    @Override public void setPosition(int row, int col) { this.row = row; this.col = col; }
+    @Override public boolean isHero() { return true; }
+}
+```
+
+---
+
+## Entity Management (Updated)
 
 The `LegendsOfValorWorldMap` now tracks all hero and monster positions:
 
@@ -131,6 +184,12 @@ private final Map<Monster, int[]> monsterPositions; // Monster -> [row, col]
 ```
 
 ### Available Methods
+
+#### Unified GamePiece Query (NEW)
+```java
+world.getPieceAt(row, col);              // Returns any GamePiece (Hero or Monster) or null
+world.hasPieceAt(row, col);              // Returns true if any piece at position
+```
 
 #### Hero Management
 ```java
@@ -261,6 +320,8 @@ if (roundNumber % MONSTER_SPAWN_INTERVAL == 0) {
 ## Class Diagram
 
 ```
+================== WORLD MAP HIERARCHY ==================
+
                     ┌─────────────────┐
                     │    IWorldMap    │
                     │   (interface)   │
@@ -270,17 +331,38 @@ if (roundNumber % MONSTER_SPAWN_INTERVAL == 0) {
             ▼                                 ▼
 ┌───────────────────────┐      ┌──────────────────────────┐
 │ MonstersAndHeroes     │      │ LegendsOfValorWorldMap   │
-│     WorldMap          │      │  - heroPositions         │
-│  (original game)      │      │  - monsterPositions      │
-└───────────────────────┘      │  - moveHero()            │
-            ▲                  │  - getMonstersInRange()  │
-            │                  │  - isHeroVictory()       │
-┌───────────────────────┐      └──────────────────────────┘
+│     WorldMap          │      │  - getPieceAt()          │
+│  (original game)      │      │  - moveHero()            │
+└───────────────────────┘      │  - getMonstersInRange()  │
+            ▲                  │  - isHeroVictory()       │
+            │                  └──────────────────────────┘
+┌───────────────────────┐      
 │      WorldMap         │
-│   (deprecated,        │
-│    backward compat)   │
+│   (deprecated)        │
 └───────────────────────┘
 
+
+================== GAME PIECE HIERARCHY ==================
+
+         ┌──────────────┐
+         │  GamePiece   │
+         │ (interface)  │
+         │ - getName()  │
+         │ - isAlive()  │
+         │ - getRow()   │
+         │ - getCol()   │
+         └──────┬───────┘
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+   ┌─────────┐     ┌─────────┐
+   │  Hero   │     │ Monster │
+   │ isHero()│     │isMonster│
+   │ = true  │     │ = true  │
+   └─────────┘     └─────────┘
+
+
+================== TILE FEATURE HIERARCHY ==================
 
          ┌──────────────┐
          │ TileFeature  │

@@ -1,5 +1,6 @@
 package hero;
 
+import entity.GamePiece;
 import hero.enums.HeroSkill;
 import market.model.item.Armor;
 import market.model.item.Item;
@@ -12,9 +13,24 @@ import java.util.Set;
 import static utils.GameConstants.*;
 
 /**
- * Abstract class representing a Hero
+ * Abstract class representing a Hero.
+ * Implements GamePiece interface for unified position tracking on the game board.
+ * 
+ * ==================== DESIGN CHANGE LOG ====================
+ * 
+ * ADDED: GamePiece interface implementation
+ * 
+ * REASON:
+ * - Hero and Monster needed a common abstraction for the game board
+ * - WorldMap can now manage all pieces uniformly via GamePiece interface
+ * - Follows Interface Segregation and Dependency Inversion principles
+ * 
+ * NEW FIELDS:
+ * - row, col: Position tracking for Legends of Valor game mode
+ * 
+ * ===========================================================
  */
-public abstract class Hero {
+public abstract class Hero implements GamePiece {
 
     private final String name;
     private int level;
@@ -32,6 +48,10 @@ public abstract class Hero {
 
     private Weapon equippedWeapon;
     private Armor equippedArmor;
+
+    // Position tracking for GamePiece interface (used in Legends of Valor)
+    private int row;
+    private int col;
 
     protected Hero(String name,
                    int level,
@@ -291,6 +311,46 @@ public abstract class Hero {
                 "%s (%s) Level: %d | HP: %d, MP: %d, Strength: %d, Dexterity: %d, Agility: %d, Gold: %d, Experience : %d",
                 name, getHeroClassName(), level, hp, mp, strength, dexterity, agility, wallet.getGold(), experience
         );
+    }
+
+    // ==================== GamePiece Interface Implementation ====================
+
+    /**
+     * Gets the current row position on the map.
+     * @return the row index
+     */
+    @Override
+    public int getRow() {
+        return row;
+    }
+
+    /**
+     * Gets the current column position on the map.
+     * @return the column index
+     */
+    @Override
+    public int getCol() {
+        return col;
+    }
+
+    /**
+     * Sets the position of this hero on the map.
+     * @param row the row index
+     * @param col the column index
+     */
+    @Override
+    public void setPosition(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
+    /**
+     * Identifies this piece as a hero.
+     * @return true (this is always a Hero)
+     */
+    @Override
+    public boolean isHero() {
+        return true;
     }
 
 }

@@ -1,5 +1,6 @@
 package monster;
 
+import entity.GamePiece;
 import monster.enums.MonsterAttribute;
 import utils.GameConstants;
 
@@ -8,9 +9,24 @@ import java.util.Set;
 import static utils.GameConstants.HERO_HP_PER_LEVEL;
 
 /**
- * Abstract class representing a Monster
+ * Abstract class representing a Monster.
+ * Implements GamePiece interface for unified position tracking on the game board.
+ * 
+ * ==================== DESIGN CHANGE LOG ====================
+ * 
+ * ADDED: GamePiece interface implementation
+ * 
+ * REASON:
+ * - Hero and Monster needed a common abstraction for the game board
+ * - WorldMap can now manage all pieces uniformly via GamePiece interface
+ * - Follows Interface Segregation and Dependency Inversion principles
+ * 
+ * NEW FIELDS:
+ * - row, col: Position tracking for Legends of Valor game mode
+ * 
+ * ===========================================================
  */
-public abstract class Monster {
+public abstract class Monster implements GamePiece {
 
     private final String name;
     private final int level;
@@ -19,6 +35,10 @@ public abstract class Monster {
     private int baseDamage;
     private int defense;
     private int dodgeAbility;
+
+    // Position tracking for GamePiece interface (used in Legends of Valor)
+    private int row;
+    private int col;
 
     protected Monster(String name,
                       int level,
@@ -173,5 +193,45 @@ public abstract class Monster {
                 dodgeAbility,
                 getDodgeChance() * 100.0
         );
+    }
+
+    // ==================== GamePiece Interface Implementation ====================
+
+    /**
+     * Gets the current row position on the map.
+     * @return the row index
+     */
+    @Override
+    public int getRow() {
+        return row;
+    }
+
+    /**
+     * Gets the current column position on the map.
+     * @return the column index
+     */
+    @Override
+    public int getCol() {
+        return col;
+    }
+
+    /**
+     * Sets the position of this monster on the map.
+     * @param row the row index
+     * @param col the column index
+     */
+    @Override
+    public void setPosition(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
+    /**
+     * Identifies this piece as a monster.
+     * @return true (this is always a Monster)
+     */
+    @Override
+    public boolean isMonster() {
+        return true;
     }
 }
