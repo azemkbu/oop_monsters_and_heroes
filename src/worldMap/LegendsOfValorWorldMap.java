@@ -33,7 +33,7 @@ import static utils.ConsoleColors.*;
  * - Row 0: Monster Nexus
  * - Row 7: Hero Nexus
  */
-public class LegendsOfValorWorldMap implements IWorldMap {
+public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
 
     /** Default map size for Legends of Valor */
     public static final int DEFAULT_SIZE = 8;

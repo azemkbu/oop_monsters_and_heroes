@@ -9,7 +9,10 @@ public enum HeroActionType {
     CAST_SPELL("Cast Spell"),
     USE_POTION("Use Potion"),
     EQUIP("Equip Weapon/Armor"),
-    SKIP("Skip turn");
+    SKIP("Skip turn"),
+    MOVE("Move"),
+    TELEPORT("Teleport"),
+    RECALL("Recall");
 
     private final String label;
 
