@@ -29,7 +29,7 @@ public class TeleportAction implements HeroActionStrategy {
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ignored) {
-        worldMap.printMap(null);
+        worldMap.printMap();
 
         Hero targetHero = chooseTeleportTarget(hero);
         if (targetHero == null) {
@@ -41,7 +41,7 @@ public class TeleportAction implements HeroActionStrategy {
             io.printlnFail(MessageUtils.FAILED);
         } else {
             io.printlnSuccess(String.format(MessageUtils.TELEPORT_SUCCESS, hero.getName(), targetHero.getName()));
-            worldMap.printMap(null);
+            worldMap.printMap();
         }
     }
 

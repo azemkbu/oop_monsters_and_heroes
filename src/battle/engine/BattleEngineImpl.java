@@ -14,6 +14,7 @@ import utils.MessageUtils;
 import utils.GameConstants;
 import utils.IOUtils;
 import worldMap.IWorldMap;
+import worldMap.ILegendsWorldMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,8 +39,11 @@ public class BattleEngineImpl implements BattleEngine {
 
     @Override
     public boolean runBattle(Party party, IWorldMap iWorldMap) {
+        GameType gameType = (iWorldMap instanceof ILegendsWorldMap)
+                ? GameType.LEGENDS_OF_VALOR
+                : GameType.MONSTERS_AND_HEROES;
         HashMap<HeroActionType, HeroActionStrategy> actions = (HashMap<HeroActionType, HeroActionStrategy>)
-                BattleActionsConfig.createActions(GameType.MONSTERS_AND_HEROES, iWorldMap, ioUtils);
+                BattleActionsConfig.createActions(gameType, iWorldMap, ioUtils);
 
         List<Monster> monsters = monsterFactory.createMonstersForParty(party);
 

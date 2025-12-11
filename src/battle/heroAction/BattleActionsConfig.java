@@ -56,8 +56,8 @@ public final class BattleActionsConfig {
 
 
         ILegendsWorldMap map = (ILegendsWorldMap) worldMap;
-        actions.put(HeroActionType.ATTACK, new LoVAttackAction());
-        actions.put(HeroActionType.CAST_SPELL, new LoVCastSpellAction());
+        actions.put(HeroActionType.ATTACK, new LoVAttackAction(map));
+        actions.put(HeroActionType.CAST_SPELL, new LoVCastSpellAction(map));
         actions.put(HeroActionType.USE_POTION, new UsePotionAction());
         actions.put(HeroActionType.EQUIP, new EquipAction());
         actions.put(HeroActionType.MOVE,     new MoveAction(map, ioUtils));

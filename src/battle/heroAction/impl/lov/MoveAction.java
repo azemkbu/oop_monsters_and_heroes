@@ -55,7 +55,12 @@ public class MoveAction implements HeroActionStrategy {
             io.printlnTitle("  Q = Cancel");
 
             io.printPrompt("Enter direction (W/A/S/D or Q): ");
-            char input = (char) Character.toUpperCase(Integer.parseInt(io.readLine()));
+            String line = io.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                io.printlnFail("Invalid input, please use W/A/S/D or Q.");
+                continue;
+            }
+            char input = Character.toUpperCase(line.trim().charAt(0));
 
             switch (input) {
                 case 'W':

@@ -33,7 +33,7 @@ import static utils.ConsoleColors.*;
  * - Row 0: Monster Nexus
  * - Row 7: Hero Nexus
  */
-public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
+public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
     /** Default map size for Legends of Valor */
     public static final int DEFAULT_SIZE = 8;
@@ -245,6 +245,11 @@ public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
             return false;
         }
 
+        // Heroes cannot move onto a monster tile (combat is handled via attack actions)
+        if (getMonsterAt(newRow, newCol) != null) {
+            return false;
+        }
+
         // Check if trying to move behind (north of) a monster
         if (direction == Direction.UP) {
             // Cannot move north if there's a monster between current and target
@@ -345,6 +350,11 @@ public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
         int row = MONSTER_NEXUS_ROW;
         int col = LANE_COLUMNS[lane][1]; // Right column of lane
         
+        // Do not spawn on top of an existing piece.
+        if (getHeroAt(row, col) != null || getMonsterAt(row, col) != null) {
+            return;
+        }
+
         monsterPositions.put(monster, new int[]{row, col});
         monster.setPosition(row, col);  // Sync GamePiece position
         if (!monsters.contains(monster)) {
@@ -418,6 +428,9 @@ public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
 
         // Check if another monster is there
         if (getMonsterAt(newRow, col) != null) return false;
+
+        // Monsters cannot move onto a hero tile (they must attack when in range)
+        if (getHeroAt(newRow, col) != null) return false;
 
         // Update position (both Map and GamePiece)
         monsterPositions.put(monster, new int[]{newRow, col});

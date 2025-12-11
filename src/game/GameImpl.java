@@ -14,7 +14,7 @@ import utils.IOUtils;
 import worldMap.enums.Direction;
 import worldMap.Tile;
 import worldMap.enums.TileType;
-import worldMap.WorldMap;
+import worldMap.IWorldMap;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,13 +26,13 @@ import static utils.ConsoleColors.*;
  */
 public class GameImpl implements Game {
 
-    private final WorldMap worldMap;
+    private final IWorldMap worldMap;
     private final Party party;
     private final BattleEngine battleEngine;
     private final IOUtils io;
     private boolean running = false;
 
-    public GameImpl(WorldMap worldMap,
+    public GameImpl(IWorldMap worldMap,
                     Party party,
                     BattleEngine battleEngine,
                     IOUtils ioUtils) {
@@ -103,7 +103,7 @@ public class GameImpl implements Game {
         double rollDice = Math.random();
         if (rollDice <= GameConstants.BATTLE_PROBABILITY) {
             io.printlnHeader(MessageUtils.BATTLE_START_MESSAGE);
-            boolean heroesWon = battleEngine.runBattle(party);
+            boolean heroesWon = battleEngine.runBattle(party, worldMap);
             if (!heroesWon) {
                 io.printlnFail(MessageUtils.PARTY_DEFEATED_MESSAGE);
                 stop();
