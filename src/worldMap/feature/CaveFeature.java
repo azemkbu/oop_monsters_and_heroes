@@ -1,21 +1,7 @@
 package worldMap.feature;
 
 /**
- * Cave terrain feature that provides agility bonus to heroes standing on it.
- * Agility affects dodge chance in combat.
- * 
- * ==================== DESIGN CHANGE LOG ====================
- * 
- * PREVIOUS DESIGN (Buggy):
- * - Directly modified hero.setAgility() on enter/exit
- * - Stored lastBonusApplied as instance variable (shared state bug)
- * 
- * NEW DESIGN:
- * - Only provides getAgilityMultiplier() -> returns 1.10
- * - Battle engine calculates: effectiveAgility = hero.getAgility() * multiplier
- * - Dodge chance calculation uses effective agility
- * 
- * ===========================================================
+ * Cave terrain feature that provides +10% agility bonus to heroes standing on it.
  */
 public class CaveFeature extends TerrainBonusFeature {
 
@@ -36,14 +22,7 @@ public class CaveFeature extends TerrainBonusFeature {
 
     /**
      * Gets the agility multiplier for heroes on this tile.
-     * 
-     * Usage in BattleEngine:
-     * <pre>
-     * int effectiveAgility = (int)(hero.getAgility() * tile.getAgilityMultiplier());
-     * double dodgeChance = effectiveAgility * DODGE_MULTIPLIER;
-     * </pre>
-     * 
-     * @return 1.10 for default 10% bonus (1.0 + 0.10)
+     * @return 1.10 for default 10% bonus
      */
     @Override
     public double getAgilityMultiplier() {

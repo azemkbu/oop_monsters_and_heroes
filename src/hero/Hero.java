@@ -15,20 +15,6 @@ import static utils.GameConstants.*;
 /**
  * Abstract class representing a Hero.
  * Implements GamePiece interface for unified position tracking on the game board.
- * 
- * ==================== DESIGN CHANGE LOG ====================
- * 
- * ADDED: GamePiece interface implementation
- * 
- * REASON:
- * - Hero and Monster needed a common abstraction for the game board
- * - WorldMap can now manage all pieces uniformly via GamePiece interface
- * - Follows Interface Segregation and Dependency Inversion principles
- * 
- * NEW FIELDS:
- * - row, col: Position tracking for Legends of Valor game mode
- * 
- * ===========================================================
  */
 public abstract class Hero implements GamePiece {
 

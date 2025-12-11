@@ -4,34 +4,7 @@ import worldMap.TileFeature;
 
 /**
  * Abstract base class for terrain features that provide stat bonuses to heroes.
- * 
- * ==================== DESIGN CHANGE LOG ====================
- * 
- * PREVIOUS DESIGN (Problematic):
- * - Used applyEffect(Hero) / removeEffect(Hero) to directly modify hero stats
- * - Each feature stored "lastBonusApplied" as instance variable
- * - Example: hero.setDexterity(hero.getDexterity() + bonus)
- * 
- * PROBLEMS WITH PREVIOUS DESIGN:
- * 1. Instance variable bug: If two heroes stood on same tile (even briefly),
- *    "lastBonusApplied" would be overwritten, causing incorrect stat restoration
- * 2. State pollution: Hero's base stats were modified, making it hard to track
- *    original values vs. buffed values
- * 3. Lifecycle complexity: Had to carefully manage when to apply/remove effects
- * 
- * NEW DESIGN (Query-based, following LOV reference project):
- * - Provides getXxxMultiplier() methods that return bonus multipliers
- * - Does NOT modify hero stats directly
- * - Battle engine queries the multiplier when calculating damage/defense
- * - Hero's base stats remain unchanged
- * 
- * BENEFITS OF NEW DESIGN:
- * 1. No state tracking needed - stateless and thread-safe
- * 2. Clean separation - terrain knows its bonus, battle calculates with it
- * 3. Easy to query - just ask "what's the multiplier?" anytime
- * 4. Follows Open/Closed Principle - easy to add new terrain types
- * 
- * ===========================================================
+ * Subclasses override specific multiplier methods (e.g., getStrengthMultiplier).
  */
 public abstract class TerrainBonusFeature implements TileFeature {
 

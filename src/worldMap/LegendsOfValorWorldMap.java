@@ -22,6 +22,7 @@ import static utils.ConsoleColors.*;
 /**
  * Implementation of {@link IWorldMap} for Legends of Valor game.
  * Represents an 8x8 grid divided into three lanes separated by walls.
+ * Manages hero and monster positions via GamePiece interface.
  * 
  * Layout:
  * - Columns 0-1: Top Lane
@@ -31,28 +32,6 @@ import static utils.ConsoleColors.*;
  * - Columns 6-7: Bot Lane
  * - Row 0: Monster Nexus
  * - Row 7: Hero Nexus
- * 
- * ==================== DESIGN CHANGE LOG ====================
- * 
- * ENTITY MANAGEMENT WITH GAMEPIECE INTERFACE
- * 
- * DESIGN PRINCIPLES:
- * 1. Hero and Monster both implement GamePiece interface
- * 2. Unified position tracking via GamePiece.setPosition()/getRow()/getCol()
- * 3. WorldMap maintains position Maps for O(1) lookups
- * 4. GamePiece position fields sync with Map entries
- * 
- * KEY METHODS:
- * - getPieceAt(row, col): Returns any GamePiece at position (unified query)
- * - getHeroAt(row, col): Returns Hero at position
- * - getMonsterAt(row, col): Returns Monster at position
- * 
- * BENEFITS:
- * - Dependency Inversion: Can operate on GamePiece interface
- * - Single Responsibility: WorldMap manages positions, pieces manage their own state
- * - Open/Closed: Easy to add new piece types that implement GamePiece
- * 
- * ===========================================================
  */
 public class LegendsOfValorWorldMap implements IWorldMap {
 

@@ -7,34 +7,7 @@ import worldMap.feature.NexusFeature;
 /**
  * Represents a single tile on the world map.
  * Supports both original game types and Legends of Valor terrain types.
- * 
- * ==================== DESIGN CHANGE LOG ====================
- * 
- * PREVIOUS DESIGN:
- * - Had applyTerrainEffect(Hero) / removeTerrainEffect(Hero) methods
- * - These called feature.applyEffect() / feature.removeEffect()
- * - Required tracking hero enter/exit events
- * 
- * PROBLEMS:
- * 1. Caller had to remember to call removeTerrainEffect when hero left
- * 2. If forgotten, hero stats would be permanently modified
- * 3. Instance variable bug in features (see TerrainBonusFeature)
- * 
- * NEW DESIGN:
- * - Provides getStrengthMultiplier(), getDexterityMultiplier(), getAgilityMultiplier()
- * - These delegate to the feature if present, otherwise return 1.0 (no bonus)
- * - Battle engine queries these when calculating effective stats
- * - No state modification, no tracking needed
- * 
- * USAGE EXAMPLE (in BattleEngine):
- * <pre>
- * Tile heroTile = world.getTile(heroRow, heroCol);
- * int effectiveStrength = (int)(hero.getStrength() * heroTile.getStrengthMultiplier());
- * int effectiveDexterity = (int)(hero.getDexterity() * heroTile.getDexterityMultiplier());
- * int effectiveAgility = (int)(hero.getAgility() * heroTile.getAgilityMultiplier());
- * </pre>
- * 
- * ===========================================================
+ * Provides stat multiplier queries for terrain bonuses via TileFeature.
  */
 public class Tile {
 
