@@ -54,7 +54,7 @@ import static utils.ConsoleColors.*;
  * 
  * ===========================================================
  */
-public class LegendsOfValorWorldMap implements IWorldMap {
+public class LegendsOfValorWorldMap implements IWorldMap, ILegendsWorldMap {
 
     /** Default map size for Legends of Valor */
     public static final int DEFAULT_SIZE = 8;

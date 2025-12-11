@@ -1,6 +1,7 @@
 package battle.engine;
 
 import battle.heroAction.BattleContext;
+import battle.heroAction.GameType;
 import battle.menu.BattleMenu;
 import battle.enums.HeroActionType;
 import battle.heroAction.HeroActionStrategy;
@@ -12,6 +13,7 @@ import monster.MonsterFactory;
 import utils.MessageUtils;
 import utils.GameConstants;
 import utils.IOUtils;
+import worldMap.IWorldMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,18 +28,19 @@ public class BattleEngineImpl implements BattleEngine {
     private final BattleMenu battleMenu;
     private final IOUtils ioUtils;
     private final MonsterFactory monsterFactory;
-    private final HashMap<HeroActionType, HeroActionStrategy> actions;
 
     public BattleEngineImpl(BattleMenu battleMenu, IOUtils ioUtils,
                             MonsterFactory monsterFactory) {
         this.battleMenu = battleMenu;
         this.ioUtils = ioUtils;
         this.monsterFactory = monsterFactory;
-        this.actions = (HashMap<HeroActionType, HeroActionStrategy>) BattleActionsConfig.createActions();
     }
 
     @Override
-    public boolean runBattle(Party party) {
+    public boolean runBattle(Party party, IWorldMap iWorldMap) {
+        HashMap<HeroActionType, HeroActionStrategy> actions = (HashMap<HeroActionType, HeroActionStrategy>)
+                BattleActionsConfig.createActions(GameType.MONSTERS_AND_HEROES, iWorldMap, ioUtils);
+
         List<Monster> monsters = monsterFactory.createMonstersForParty(party);
 
         List<Monster> originalMonsters = new ArrayList<>(monsters);

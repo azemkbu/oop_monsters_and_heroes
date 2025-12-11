@@ -69,6 +69,13 @@ public final class MessageUtils {
     public static final String CHOOSE_MONSTER_TO_TARGET_MESSAGE = "Choose a monster to target: ";
     public static final String CHOOSE_ITEM_TO_USE_BY_TYPE = "Choose %s to use: ";
     public static final String BATTLE_INFO_HEADER = "=======BATTLE INFORMATION=======";
-
-
+    public static final String NO_ENEMIES_IN_RANGE = "No enemies are within range for this action.";
+    public static final String TELEPORT_SUCCESS = "%s teleported near %s!";
+    public static final String TELEPORT_NO_VALID_HEROES = "No valid heroes in other lanes to teleport to";
+    public static final String TELEPORT_CHOOSE_HERO = "Choose a hero to teleport near:";
+    public static final String MSG_NO_LANE = "Cannot recall: this hero is not assigned to any lane";
+    public static final String MSG_RECALLING_FORMAT = "Recalling %s to their nexus";
+    public static final String MSG_RECALL_SUCCESS = "%s has been recalled to lane %d at [row=%d, col=%d]";
+    public static final String TRY_ANOTHER_DIRECTION = "You can't move %s from here. Try another direction.";
+    public static final String SUCCESS_MOVE = "%s moved %s";
 }

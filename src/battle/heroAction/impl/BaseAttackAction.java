@@ -1,23 +1,23 @@
 package battle.heroAction.impl;
 
 import battle.heroAction.BattleContext;
-import battle.menu.BattleMenu;
 import battle.heroAction.HeroActionStrategy;
+import battle.menu.BattleMenu;
 import hero.Hero;
 import market.model.item.Weapon;
 import monster.Monster;
-import utils.MessageUtils;
 import utils.GameConstants;
 import utils.IOUtils;
+import utils.MessageUtils;
 
 import java.util.List;
 
 import static utils.GameConstants.HERO_ATTACK_MULTIPLIER;
 
 /**
- * Implementation of the attack action during {@link Hero} turn
+ * Base implementation of the attack action during {@link Hero} turn
  */
-public class AttackAction implements HeroActionStrategy {
+public abstract class BaseAttackAction implements HeroActionStrategy {
 
     @Override
     public void execute(Hero hero,
@@ -27,12 +27,14 @@ public class AttackAction implements HeroActionStrategy {
 
         BattleMenu menu = context.getBattleMenu();
 
-        if (monsters.isEmpty()) {
-            ioUtils.printlnWarning(MessageUtils.NO_MONSTERS_TO_ATTACK);
+        List<Monster> availableMonsters = getAvailableMonsters(hero, monsters, context);
+
+        if (availableMonsters == null || availableMonsters.isEmpty()) {
+            handleNoAvailableMonsters(hero, monsters, context, ioUtils);
             return;
         }
 
-        Monster monster = menu.chooseMonsterTarget(hero, monsters);
+        Monster monster = menu.chooseMonsterTarget(hero, availableMonsters);
 
         if (monster == null) {
             ioUtils.printlnWarning(MessageUtils.NO_MONSTER_SELECTED);
@@ -69,6 +71,20 @@ public class AttackAction implements HeroActionStrategy {
         if (!monster.isAlive()) {
             ioUtils.printlnWarning(String.format(MessageUtils.CHARACTER_DEFEATED, monster.getName()));
         }
+    }
+
+    protected List<Monster> getAvailableMonsters(Hero hero,
+                                                 List<Monster> monsters,
+                                                 BattleContext context) {
+        return monsters;
+    }
+
+
+    protected void handleNoAvailableMonsters(Hero hero,
+                                             List<Monster> monsters,
+                                             BattleContext context,
+                                             IOUtils ioUtils) {
+        ioUtils.printlnWarning(MessageUtils.NO_MONSTERS_TO_ATTACK);
     }
 
     public int getCalculatedDamage(Hero hero, BattleMenu menu, IOUtils ioUtils) {
