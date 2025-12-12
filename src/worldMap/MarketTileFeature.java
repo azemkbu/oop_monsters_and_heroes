@@ -2,6 +2,12 @@ package worldMap;
 
 import market.model.Market;
 
+/*
+*
+* Handles the MarketTile
+*
+*/
+
 public class MarketTileFeature implements TileFeature {
 
     private final Market market;

@@ -1,12 +1,17 @@
 package upload;
 
-import market.model.item.Spell;
-import market.model.item.SpellType;
-
 import java.util.ArrayList;
 import java.util.List;
-
+import market.model.item.Spell;
+import market.model.item.SpellType;
 import static upload.base.GenericFileLoader.load;
+
+/*
+*
+* Handles loading spells from .txt file
+*
+*
+*/
 
 public final class SpellFileLoader {
 

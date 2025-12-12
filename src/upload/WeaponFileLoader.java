@@ -1,10 +1,17 @@
 package upload;
 
-import market.model.item.Weapon;
-
 import java.util.List;
-
+import market.model.item.Weapon;
 import static upload.base.GenericFileLoader.load;
+
+
+
+/*
+*
+*  Handles loading weapons from .txt
+*
+*
+*/
 
 public final class WeaponFileLoader {
 

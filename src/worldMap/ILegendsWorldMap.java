@@ -1,9 +1,15 @@
 package worldMap;
 
 import hero.Hero;
+import java.util.List;
 import worldMap.enums.Direction;
 
-import java.util.List;
+/*
+*
+*  Extension of world map for legends of valor
+*
+*
+*/
 
 public interface ILegendsWorldMap extends IWorldMap {
     boolean moveHero(Hero hero, Direction direction);
