@@ -3,9 +3,12 @@ package worldMap;
 import entity.GamePiece;
 import hero.Hero;
 import hero.Party;
+import java.security.SecureRandom;
+import java.util.*;
 import market.model.Market;
 import market.service.MarketFactory;
 import monster.Monster;
+import static utils.ConsoleColors.*;
 import utils.IOUtils;
 import worldMap.enums.Direction;
 import worldMap.enums.TileType;
@@ -13,11 +16,6 @@ import worldMap.feature.BushFeature;
 import worldMap.feature.CaveFeature;
 import worldMap.feature.KoulouFeature;
 import worldMap.feature.NexusFeature;
-
-import java.security.SecureRandom;
-import java.util.*;
-
-import static utils.ConsoleColors.*;
 
 /**
  * Implementation of {@link IWorldMap} for Legends of Valor game.
@@ -54,11 +52,12 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /** Hero Nexus row (bottom of map) */
     public static final int HERO_NEXUS_ROW = 7;
 
-    /** Distribution ratios for terrain types */
+    /** Different distributions of all the different type of tiles */
     public static final double BUSH_RATIO = 0.20;
     public static final double CAVE_RATIO = 0.20;
     public static final double KOULOU_RATIO = 0.20;
-    public static final double PLAIN_RATIO = 0.40;
+    public static final double PLAIN_RATIO = 0.30;
+    public static final double OBSTACLE_RATIO = 0.10;
 
     private final int size;
     private final Tile[][] grid;
@@ -684,6 +683,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
             monsterIndex++;
         }
 
+
         // Format: "XTY" where X=hero, T=tile type, Y=monster
         String tileSymbol = tile.getType().getSymbol();
         String colorCode = getTileColor(tile.getType());
@@ -850,11 +850,14 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         int numBush = (int) Math.round(totalLaneTiles * BUSH_RATIO);
         int numCave = (int) Math.round(totalLaneTiles * CAVE_RATIO);
         int numKoulou = (int) Math.round(totalLaneTiles * KOULOU_RATIO);
-        int numPlain = totalLaneTiles - numBush - numCave - numKoulou;
-
+        int numObstacles = (int) Math.round(totalLaneTiles * OBSTACLE_RATIO);
+        int numPlain = totalLaneTiles - numBush - numCave - numKoulou - numObstacles;
+        
+        // Adds the different file types to a list that we can then shuffle
         addTileTypes(tileTypes, TileType.BUSH, numBush);
         addTileTypes(tileTypes, TileType.CAVE, numCave);
         addTileTypes(tileTypes, TileType.KOULOU, numKoulou);
+        addTileTypes(tileTypes, TileType.OBSTACLE, numObstacles);
         addTileTypes(tileTypes, TileType.PLAIN, numPlain);
 
         Collections.shuffle(tileTypes, random);
@@ -876,6 +879,8 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         }
     }
 
+
+    // Creates the nexuses for heroes and monsters
     private Tile createNexusTile(boolean isHeroNexus, int laneIndex) {
         Market market = isHeroNexus ? marketFactory.createRandomMarket() : null;
         NexusFeature feature = new NexusFeature(market, isHeroNexus, laneIndex);
@@ -895,6 +900,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         }
     }
 
+    // Adds tile to the tile
     private void addTileTypes(List<TileType> list, TileType type, int count) {
         for (int i = 0; i < count; i++) {
             list.add(type);
