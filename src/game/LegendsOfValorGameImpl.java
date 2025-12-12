@@ -46,6 +46,7 @@ public class LegendsOfValorGameImpl {
     private final IOUtils io;
 
     private int round = 1;
+    private boolean running = true;
 
     public LegendsOfValorGameImpl(LegendsOfValorWorldMap worldMap,
                                   Party party,
@@ -69,9 +70,13 @@ public class LegendsOfValorGameImpl {
                 BattleActionsConfig.createActions(GameType.LEGENDS_OF_VALOR, worldMap, io);
         BattleContext context = new BattleContext(battleMenu);
 
-        while (true) {
+        while (running) {
             io.printlnHeader("===== Round " + round + " =====");
             worldMap.printMap();
+            if (wantsQuitThisRound()) {
+                io.printlnSuccess("Quitting Legends of Valor. Goodbye!");
+                return;
+            }
 
             if (worldMap.isHeroVictory()) {
                 io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -247,12 +252,17 @@ public class LegendsOfValorGameImpl {
             return;
         }
 
-        io.printPrompt("Enter market for " + hero.getName() + "? (y/n): ");
+        io.printPrompt("Enter market for " + hero.getName() + "? (y/n, q to quit): ");
         String line = io.readLine();
-        if (line == null || line.trim().isEmpty()) {
+        if (line.trim().isEmpty()) {
             return;
         }
         char c = Character.toLowerCase(line.trim().charAt(0));
+        if (c == 'q') {
+            io.printlnSuccess("Quitting Legends of Valor. Goodbye!");
+            running = false;
+            return;
+        }
         if (c != 'y') {
             return;
         }
@@ -260,6 +270,13 @@ public class LegendsOfValorGameImpl {
         MarketService marketService = new MarketServiceImpl(market, io);
         MarketMenu marketMenu = new MarketMenuImpl(marketService, io);
         marketMenu.runMarketSession(hero);
+    }
+
+    private boolean wantsQuitThisRound() {
+        io.printPrompt("Press ENTER to continue, or Q to quit: ");
+        String line = io.readLine();
+        String trimmed = line.trim();
+        return !trimmed.isEmpty() && (trimmed.equalsIgnoreCase("q"));
     }
 }
 

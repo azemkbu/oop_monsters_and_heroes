@@ -25,6 +25,9 @@ public class ConsoleIOUtils implements IOUtils {
 
     @Override
     public String readLine() {
+        if (!scanner.hasNextLine()) {
+            throw new EndOfInputException("No more input (EOF).");
+        }
         return scanner.nextLine();
     }
 
@@ -37,10 +40,6 @@ public class ConsoleIOUtils implements IOUtils {
     public int readIntInRange(int min, int max) {
         while (true) {
             String line = readLine();
-            if (line == null) {
-                printPrompt(String.format("Please enter a number between %d and %d: ", min, max));
-                continue;
-            }
 
             try {
                 int value = Integer.parseInt(line.trim());
