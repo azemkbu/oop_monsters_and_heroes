@@ -1,9 +1,9 @@
 # CS611-Assignment <Legends: Monsters and Heroes>
 -------------------------------------------------------------
 --------------
-- Name: Azem Kakitaeva
-- Email: azemk@bu.edu
-- Student ID: U51216906
+- Name: Azem Kakitaeva, Zhengzheng Tang, Antony Ponomarev
+- Email: azemk@bu.edu, , antonyp@bu.edu
+- Student ID: U51216906, U43948985
 
 
 ## File Structure 
@@ -22,6 +22,26 @@
   BattleActionsConfig.java       // Configuration class mapping action types to strategies
   BattleContext.java             // Context class containing shared state for ongoing battles
 
+/battle/heroAction/helper
+  LoVRangeUtils.java             // Checks if an attack is within range
+
+/battle/heroAction/impl
+  BaseAtttackAction.java         // Handles the basic attacking feature for heroes
+  BaseCastSpellAction.java       // Handles the basic spell cast for a hero
+  BaseEquipAction.java           // Allows the heroes to equip weapon and armor
+  BaseUsePotionAction.java       //Allows the hero to use a potion
+
+/battle/heroAction/impl/mh
+  MHAttackAction.java            // Handles the hero attack specifically within monsters and heroes
+  MHCastSpellAction.java         // Handles the hero's ability to cast spells specifically within monsters and heroes
+
+/battle/heroAction/impl/lov
+  LoVAttackAction.java           // Handles the hero attack specifically within Legends of Valor
+  LoVCastSpellAction.java        // Handles the hero's ability to cast spells specifically within Legends of Valor
+ MoveAction.java                 // Handles the hero's ability to move on the board in Legends of Valor
+ RecallAction.java               // Handles the hero's ability to recall back to the nexus
+ TeleportAction.java             // Handles the hero's ability to teleport to another hero
+
 /battle/heroAction/impl
   AttackAction.java              // Strategy implementing an attack action
   CastSpellAction.java           // Strategy implementing spell-casting behavior for heroes
@@ -35,8 +55,9 @@
 /game
   Game.java                      // Interface defining main game methods
   GameCommand.java               // Enum mapping keyboard commands to game actions
-  GameImpl.java                  // Implementation of core game logic
-  GameLauncher.java              // Entry class responsible for loading resources and starting the game
+  GameImpl.java                  // Handles the game loop of Heroes and Monsters
+  GameLauncher.java              // Entry class responsible for loading resources, selecting between games, and running the game
+  LegendsOfValorGameImpl.java    // Handles the game loop of Legends of Valor
 
 /hero/enums
   HeroSkill.java                 // Enum representing hero skill categories
@@ -107,6 +128,7 @@
   GameConstants.java             // Centralized constants for game 
   IOUtils.java                   // Utility interface for handling generic input/output operations
   MessageUtils.java              // Repository for centralized UI text messages
+  EndOfInputException            // Extends a normal RuntimeException so that user is prompted with a full stack trace.
 
 /worldMap/enums
   Direction.java                 // Enum representing movement directions on the world map
@@ -116,7 +138,17 @@
   MarketTileFeature.java         // Feature class marking a tile as containing a market
   Tile.java                      // Class representing a single grid cell of the world map
   TileFeature.java               // Abstract base class for map tile features
-  WorldMap.java                  // Class responsible for generating and managing the game map
+  WorldMap.java                  // Extends the MonstersAndHeroesWorldMap.java to keep compatability with previous version.
+  MonstersAndHeroesWorldMap.java // Implementation of the world map for Monsters and Heroes
+  LegendsOfValorWorldMap.java    // Implements the world map for Legends of valor
+  IWorldMap.java                 // General interface for creating world maps for different games
+
+/worldMap/feature
+  BushFeature.java               // Handles the bushes on the map, extends TerrainBonusFeature
+  CaveFeature.java               // Handles the caves on the map, extends TerrainBonusFeature
+  KouloFeature.java              // Handles the Koulou's on the map, extends TerrainBonusFeature
+  NexusFeature.java              // Handles the Nexus's on the map
+  TerrainBonusFeature.java       // Abstract class that can be implemented by bush/cave/koulo that gives heroes stats boosts
 ```
 
 
