@@ -2,14 +2,12 @@ package hero;
 
 import entity.GamePiece;
 import hero.enums.HeroSkill;
+import java.util.List;
+import java.util.Set;
 import market.model.item.Armor;
 import market.model.item.Item;
 import market.model.item.Weapon;
 import utils.GameConstants;
-
-import java.util.List;
-import java.util.Set;
-
 import static utils.GameConstants.*;
 
 /**

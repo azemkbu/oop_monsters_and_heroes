@@ -12,7 +12,8 @@ public enum HeroActionType {
     SKIP("Skip turn"),
     MOVE("Move"),
     TELEPORT("Teleport"),
-    RECALL("Recall");
+    RECALL("Recall"),
+    REMOVE_OBSTACLE("Remove Obstacle");
 
     private final String label;
 

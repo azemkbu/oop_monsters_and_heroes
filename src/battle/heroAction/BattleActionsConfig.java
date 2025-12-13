@@ -2,16 +2,15 @@ package battle.heroAction;
 
 import battle.enums.HeroActionType;
 import battle.heroAction.impl.EquipAction;
+import battle.heroAction.impl.UsePotionAction;
 import battle.heroAction.impl.lov.*;
 import battle.heroAction.impl.mh.MHAttackAction;
-import battle.heroAction.impl.UsePotionAction;
 import battle.heroAction.impl.mh.MhCastSpellAction;
-import utils.IOUtils;
-import worldMap.IWorldMap;
-import worldMap.ILegendsWorldMap;
-
 import java.util.HashMap;
 import java.util.Map;
+import utils.IOUtils;
+import worldMap.ILegendsWorldMap;
+import worldMap.IWorldMap;
 
 /**
  * Utility class for mapping between {@link HeroActionType}
@@ -63,6 +62,7 @@ public final class BattleActionsConfig {
         actions.put(HeroActionType.MOVE,     new MoveAction(map, ioUtils));
         actions.put(HeroActionType.TELEPORT, new TeleportAction(map, ioUtils));
         actions.put(HeroActionType.RECALL,   new RecallAction(map, ioUtils));
+        actions.put(HeroActionType.REMOVE_OBSTACLE,   new RemoveObstacle(map, ioUtils));
         return actions;
     }
 }

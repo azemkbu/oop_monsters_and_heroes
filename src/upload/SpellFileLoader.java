@@ -8,7 +8,7 @@ import static upload.base.GenericFileLoader.load;
 
 /*
 *
-* Handles loading spells from .txt file
+*  Handles loading spells from .txt file
 *
 *
 */

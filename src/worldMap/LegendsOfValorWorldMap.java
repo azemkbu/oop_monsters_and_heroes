@@ -437,6 +437,57 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         return true;
     }
 
+
+
+     public boolean moveMonsterEast(Monster monster) {
+        int[] pos = monsterPositions.get(monster);
+        if (pos == null) return false;
+
+        int newRow = pos[0];
+        int col = pos[0] - 1; // Move east
+
+        if (newRow >= size) return false;
+
+        Tile tile = getTile(newRow, col);
+        if (!tile.isAccessible()) return false;
+
+        // Check if another monster is there
+        if (getMonsterAt(newRow, col) != null) return false;
+
+        // Monsters cannot move onto a hero tile (they must attack when in range)
+        if (getHeroAt(newRow, col) != null) return false;
+
+        // Update position (both Map and GamePiece)
+        monsterPositions.put(monster, new int[]{newRow, col});
+        monster.setPosition(newRow, col);  // Sync GamePiece position
+        return true;
+    }
+
+
+    public boolean moveMonsterWest(Monster monster) {
+        int[] pos = monsterPositions.get(monster);
+        if (pos == null) return false;
+
+        int newRow = pos[0];
+        int col = pos[0] + 1; // Move west
+
+        if (newRow >= size) return false;
+
+        Tile tile = getTile(newRow, col);
+        if (!tile.isAccessible()) return false;
+
+        // Check if another monster is there
+        if (getMonsterAt(newRow, col) != null) return false;
+
+        // Monsters cannot move onto a hero tile (they must attack when in range)
+        if (getHeroAt(newRow, col) != null) return false;
+
+        // Update position (both Map and GamePiece)
+        monsterPositions.put(monster, new int[]{newRow, col});
+        monster.setPosition(newRow, col);  // Sync GamePiece position
+        return true;
+    }
+
     /**
      * Removes a dead monster from the world.
      * @param monster the monster to remove
@@ -781,6 +832,20 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
      * @return true if the column is a wall
      */
     public boolean isWallColumn(int col) {
+        for (int wallCol : WALL_COLUMNS) {
+            if (col == wallCol) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the given column is a wall.
+     * @param col the column index
+     * @return true if the column is a wall
+     */
+    public boolean isObstacle(int col) {
         for (int wallCol : WALL_COLUMNS) {
             if (col == wallCol) {
                 return true;

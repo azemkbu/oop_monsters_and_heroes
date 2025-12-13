@@ -1,27 +1,29 @@
 package game;
 
 import battle.engine.BattleEngine;
+import battle.engine.BattleEngineImpl;
 import battle.menu.BattleMenu;
 import battle.menu.BattleMenuImpl;
-import battle.engine.BattleEngineImpl;
 import hero.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Set;
 import market.service.MarketFactory;
 import monster.MonsterFactory;
 import upload.HeroFileLoader;
-import utils.MessageUtils;
-import utils.GameConstants;
 import utils.ConsoleIOUtils;
+import utils.GameConstants;
 import utils.IOUtils;
+import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.MonstersAndHeroesWorldMap;
 
-import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Scanner;
-
 /**
- * Entry point for the game that wires up the game components and starts the game loop
+ * 
+ *  GameLauncher gets user input to get game type and starts the game
+ * 
+ * 
  */
 public class GameLauncher {
 

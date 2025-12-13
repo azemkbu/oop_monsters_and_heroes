@@ -8,6 +8,9 @@ import battle.heroAction.HeroActionStrategy;
 import battle.menu.BattleMenu;
 import hero.Hero;
 import hero.Party;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import market.model.Market;
 import market.service.MarketService;
 import market.service.MarketServiceImpl;
@@ -20,10 +23,6 @@ import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.Tile;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Main game loop for Legends of Valor.
@@ -138,6 +137,7 @@ public class LegendsOfValorGameImpl {
             }
 
             HeroActionStrategy strategy = actions.get(actionType);
+            System.out.println(actionType);
             if (strategy == null) {
                 io.printlnFail(MessageUtils.UNKNOWN_COMMAND);
                 continue;
@@ -170,8 +170,11 @@ public class LegendsOfValorGameImpl {
                 monsterAttack(monster, target);
                 continue;
             }
+            
 
             worldMap.moveMonsterSouth(monster);
+            
+
         }
 
         // End-of-round recovery for alive heroes (keeps original feel)
