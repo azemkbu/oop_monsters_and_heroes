@@ -2,6 +2,7 @@ package worldMap;
 
 import hero.Hero;
 import java.util.List;
+import monster.Monster;
 import worldMap.enums.Direction;
 
 /*
@@ -25,4 +26,15 @@ public interface ILegendsWorldMap extends IWorldMap {
     int[] getHeroPosition(Hero hero);
 
     List<Hero> getHeroes();
+
+    /**
+     * Gets all monsters currently tracked on the LOV map.
+     */
+    List<Monster> getMonsters();
+
+    /**
+     * Gets the position of a monster.
+     * @return int[]{row, col} or null if not found
+     */
+    int[] getMonsterPosition(Monster monster);
 }

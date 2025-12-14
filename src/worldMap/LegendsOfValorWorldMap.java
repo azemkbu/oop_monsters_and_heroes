@@ -8,7 +8,9 @@ import java.util.*;
 import market.model.Market;
 import market.service.MarketFactory;
 import monster.Monster;
-import static utils.ConsoleColors.*;
+import ui.formatter.LegendsMapFormatter;
+import ui.formatter.LineKind;
+import ui.formatter.RenderedLine;
 import utils.IOUtils;
 import worldMap.enums.Direction;
 import worldMap.enums.TileType;
@@ -64,6 +66,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     private final Random random = new SecureRandom();
     private final MarketFactory marketFactory;
     private final IOUtils ioUtils;
+    private final LegendsMapFormatter mapFormatter = new LegendsMapFormatter();
 
     // ==================== ENTITY MANAGEMENT ====================
     // Track entity positions for quick lookup
@@ -675,132 +678,13 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
      * Prints the map showing heroes and monsters positions.
      */
     public void printMap() {
-        ioUtils.printlnHeader(CYAN + "========== LEGENDS OF VALOR ==========");
-        
-        // Print column headers
-        StringBuilder header = new StringBuilder("    ");
-        for (int col = 0; col < size; col++) {
-            header.append(String.format(" %d  ", col));
-        }
-        ioUtils.printlnTitle(header.toString());
-
-        // Print top border
-        printRowBorder();
-
-        for (int row = 0; row < size; row++) {
-            StringBuilder line = new StringBuilder();
-            line.append(String.format(" %d |", row));
-
-            for (int col = 0; col < size; col++) {
-                Tile tile = grid[row][col];
-                String cellContent = getCellContent(row, col, tile);
-                line.append(cellContent).append("|");
-            }
-
-            ioUtils.printlnTitle(line.toString());
-            
-            if (row < size - 1) {
-                printRowSeparator();
+        for (RenderedLine line : mapFormatter.render(this)) {
+            if (line.getKind() == LineKind.HEADER) {
+                ioUtils.printlnHeader(line.getText());
+            } else {
+                ioUtils.printlnTitle(line.getText());
             }
         }
-
-        // Print bottom border
-        printRowBorder();
-        printMapLegend();
-    }
-
-    private String getCellContent(int row, int col, Tile tile) {
-        // Check for hero at this position
-        String heroChar = " ";
-        int heroIndex = 0;
-        for (Hero h : heroes) {
-            int[] pos = heroPositions.get(h);
-            if (pos != null && pos[0] == row && pos[1] == col) {
-                heroChar = "H" + (heroIndex + 1);
-                break;
-            }
-            heroIndex++;
-        }
-
-        // Check for monster at this position
-        String monsterChar = " ";
-        int monsterIndex = 0;
-        for (Monster m : monsters) {
-            int[] pos = monsterPositions.get(m);
-            if (pos != null && pos[0] == row && pos[1] == col) {
-                monsterChar = "M" + (monsterIndex + 1);
-                break;
-            }
-            monsterIndex++;
-        }
-
-
-        // Format: "XTY" where X=hero, T=tile type, Y=monster
-        String tileSymbol = tile.getType().getSymbol();
-        String colorCode = getTileColor(tile.getType());
-        
-        StringBuilder content = new StringBuilder();
-        content.append(colorCode);
-        
-        if (!heroChar.equals(" ") || !monsterChar.equals(" ")) {
-            content.append(heroChar.equals(" ") ? " " : heroChar.charAt(0));
-            content.append(tileSymbol);
-            content.append(monsterChar.equals(" ") ? " " : monsterChar.charAt(0));
-        } else {
-            content.append(" ").append(tileSymbol).append(" ");
-        }
-        
-        content.append(RESET);
-        return content.toString();
-    }
-
-    private String getTileColor(TileType type) {
-        switch (type) {
-            case NEXUS:
-                return BG_CYAN + BLACK;
-            case INACCESSIBLE:
-                return BG_RED + WHITE;
-            case BUSH:
-                return BG_GREEN + BLACK;
-            case CAVE:
-                return BG_BLUE + WHITE;
-            case KOULOU:
-                return BG_YELLOW + BLACK;
-            case OBSTACLE:
-                return BG_WHITE + BLACK;
-            case PLAIN:
-            default:
-                return BG_BLACK + WHITE;
-        }
-    }
-
-    private void printRowBorder() {
-        StringBuilder border = new StringBuilder("   +");
-        for (int col = 0; col < size; col++) {
-            border.append("---+");
-        }
-        ioUtils.printlnTitle(border.toString());
-    }
-
-    private void printRowSeparator() {
-        StringBuilder separator = new StringBuilder("   +");
-        for (int col = 0; col < size; col++) {
-            separator.append("---+");
-        }
-        ioUtils.printlnTitle(separator.toString());
-    }
-
-    private void printMapLegend() {
-        ioUtils.printlnHeader("Legend:");
-        ioUtils.printlnTitle("  " + BG_CYAN + BLACK + " N " + RESET + " = Nexus (spawn/market)");
-        ioUtils.printlnTitle("  " + BG_RED + WHITE + " I " + RESET + " = Inaccessible (wall)");
-        ioUtils.printlnTitle("  " + BG_GREEN + BLACK + " B " + RESET + " = Bush (+10% Dexterity)");
-        ioUtils.printlnTitle("  " + BG_BLUE + WHITE + " V " + RESET + " = Cave (+10% Agility)");
-        ioUtils.printlnTitle("  " + BG_YELLOW + BLACK + " K " + RESET + " = Koulou (+10% Strength)");
-        ioUtils.printlnTitle("  " + BG_WHITE + BLACK + " O " + RESET + " = Obstacle (removable)");
-        ioUtils.printlnTitle("  " + BG_BLACK + WHITE + " P " + RESET + " = Plain (no effect)");
-        ioUtils.printlnTitle("");
-        ioUtils.printlnTitle("  H1, H2, H3 = Heroes | M1, M2, M3 = Monsters");
     }
 
     @Override

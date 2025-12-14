@@ -137,7 +137,6 @@ public class LegendsOfValorGameImpl {
             }
 
             HeroActionStrategy strategy = actions.get(actionType);
-            System.out.println(actionType);
             if (strategy == null) {
                 io.printlnFail(MessageUtils.UNKNOWN_COMMAND);
                 continue;
