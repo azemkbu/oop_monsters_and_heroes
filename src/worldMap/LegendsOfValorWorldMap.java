@@ -8,9 +8,6 @@ import java.util.*;
 import market.model.Market;
 import market.service.MarketFactory;
 import monster.Monster;
-import ui.formatter.LegendsMapFormatter;
-import ui.formatter.LineKind;
-import ui.formatter.RenderedLine;
 import utils.IOUtils;
 import worldMap.enums.Direction;
 import worldMap.enums.TileType;
@@ -65,8 +62,6 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     private final Tile[][] grid;
     private final Random random = new SecureRandom();
     private final MarketFactory marketFactory;
-    private final IOUtils ioUtils;
-    private final LegendsMapFormatter mapFormatter = new LegendsMapFormatter();
 
     // ==================== ENTITY MANAGEMENT ====================
     // Track entity positions for quick lookup
@@ -90,13 +85,11 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /**
      * Creates a new Legends of Valor world map.
      * @param marketFactory factory for creating markets
-     * @param ioUtils I/O utilities
      */
-    public LegendsOfValorWorldMap(MarketFactory marketFactory, IOUtils ioUtils) {
+    public LegendsOfValorWorldMap(MarketFactory marketFactory) {
         this.size = DEFAULT_SIZE;
         this.grid = new Tile[size][size];
         this.marketFactory = marketFactory;
-        this.ioUtils = ioUtils;
         
         // Initialize entity management
         this.heroPositions = new HashMap<>();
@@ -671,25 +664,19 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
     @Override
     public void printMap(Party party) {
-        printMap();
+        throw new UnsupportedOperationException("LOV map does not print directly. Use LovView + LegendsMapFormatter.");
     }
 
     /**
      * Prints the map showing heroes and monsters positions.
      */
     public void printMap() {
-        for (RenderedLine line : mapFormatter.render(this)) {
-            if (line.getKind() == LineKind.HEADER) {
-                ioUtils.printlnHeader(line.getText());
-            } else {
-                ioUtils.printlnTitle(line.getText());
-            }
-        }
+        throw new UnsupportedOperationException("LOV map does not print directly. Use LovView + LegendsMapFormatter.");
     }
 
     @Override
     public IOUtils getIoUtils() {
-        return ioUtils;
+        throw new UnsupportedOperationException("LOV map does not expose IO. Use LovView for all I/O.");
     }
 
     // ==================== LANE UTILITIES ====================

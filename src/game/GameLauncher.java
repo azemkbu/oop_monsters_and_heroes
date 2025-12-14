@@ -11,6 +11,7 @@ import java.util.Scanner;
 import java.util.Set;
 import market.service.MarketFactory;
 import monster.MonsterFactory;
+import ui.lov.ConsoleLovView;
 import upload.HeroFileLoader;
 import utils.ConsoleIOUtils;
 import utils.GameConstants;
@@ -65,17 +66,17 @@ public class GameLauncher {
                 GameConstants.LOV_HEROES_PER_TEAM);
 
         MarketFactory marketFactory = new MarketFactory();
-        LegendsOfValorWorldMap worldMap = new LegendsOfValorWorldMap(marketFactory, ioUtils);
+        LegendsOfValorWorldMap worldMap = new LegendsOfValorWorldMap(marketFactory);
 
         // Place heroes: one per lane (0..2)
         for (int lane = 0; lane < Math.min(party.getHeroes().size(), LegendsOfValorWorldMap.LANE_COLUMNS.length); lane++) {
             worldMap.placeHeroAtNexus(party.getHeroes().get(lane), lane);
         }
 
-        BattleMenu battleMenu = new BattleMenuImpl(ioUtils);
         MonsterFactory monsterFactory = new MonsterFactory();
 
-        LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(worldMap, party, battleMenu, monsterFactory, ioUtils);
+        ConsoleLovView view = new ConsoleLovView(ioUtils, worldMap);
+        LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(worldMap, party, monsterFactory, view);
         game.start();
     }
 

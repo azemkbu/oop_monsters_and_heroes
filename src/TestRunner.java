@@ -1,20 +1,19 @@
-import battle.heroAction.BattleContext;
-import battle.heroAction.impl.lov.RemoveObstacle;
+import battle.enums.HeroActionType;
 import hero.Hero;
 import hero.Wallet;
 import hero.Warrior;
+import lov.usecase.LovActionExecutor;
+import lov.usecase.LovActionResult;
+import lov.usecase.requests.RemoveObstacleRequest;
 import market.service.MarketFactory;
 import monster.Dragon;
 import monster.Monster;
-import utils.IOUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.Tile;
 import worldMap.enums.Direction;
 import worldMap.enums.TileType;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 /**
@@ -90,8 +89,7 @@ public class TestRunner {
     }
 
     private static void lov_moveHero_blocksObstacle_and_monsterTile() {
-        FakeIOUtils io = new FakeIOUtils();
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory(), io);
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Hero hero = new Warrior("HeroA", 1, 10, 10, 10, 10, new Wallet(0), 0);
@@ -135,8 +133,7 @@ public class TestRunner {
     }
 
     private static void lov_teleport_and_recall_basic() {
-        FakeIOUtils io = new FakeIOUtils();
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory(), io);
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Hero h1 = new Warrior("HeroA", 1, 10, 10, 10, 10, new Wallet(0), 0);
@@ -166,8 +163,7 @@ public class TestRunner {
     }
 
     private static void lov_spawnMonster_doesNotStackOnSpawn() {
-        FakeIOUtils io = new FakeIOUtils();
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory(), io);
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Monster m1 = new Dragon("Dragon1", 1, 10, 10, 10);
@@ -183,8 +179,7 @@ public class TestRunner {
     }
 
     private static void lov_moveMonsterSouth_blockedByObstacle() {
-        FakeIOUtils io = new FakeIOUtils();
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory(), io);
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Monster m1 = new Dragon("Dragon1", 1, 10, 10, 10);
@@ -203,8 +198,7 @@ public class TestRunner {
     }
 
     private static void lov_removeObstacleAction_changesTileType() {
-        FakeIOUtils io = new FakeIOUtils();
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory(), io);
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Hero hero = new Warrior("HeroA", 1, 10, 10, 10, 10, new Wallet(0), 0);
@@ -214,9 +208,14 @@ public class TestRunner {
         map.getTile(6, 0).setType(TileType.OBSTACLE);
         map.getTile(6, 0).setFeature(null);
 
-        io.enqueueLine("W");
-        RemoveObstacle action = new RemoveObstacle(map, io);
-        action.execute(hero, map.getAliveMonsters(), new BattleContext(null), io);
+        LovActionExecutor executor = new LovActionExecutor(map);
+        LovActionResult result = executor.execute(
+                HeroActionType.REMOVE_OBSTACLE,
+                hero,
+                map.getAliveMonsters(),
+                new RemoveObstacleRequest(Direction.UP)
+        );
+        assertTrue(result.isSuccess(), "RemoveObstacle usecase should succeed");
 
         assertEquals(TileType.PLAIN, map.getTile(6, 0).getType(), "RemoveObstacle action should turn OBSTACLE into PLAIN");
     }
@@ -238,68 +237,7 @@ public class TestRunner {
         }
     }
 
-    private static final class FakeIOUtils implements IOUtils {
-        private final Deque<String> input = new ArrayDeque<>();
-        private final List<String> output = new ArrayList<>();
-
-        void enqueueLine(String line) {
-            input.addLast(line);
-        }
-
-        @Override
-        public String readLine() {
-            return input.pollFirst();
-        }
-
-        @Override
-        public Integer readInteger() {
-            String line = readLine();
-            if (line == null) return null;
-            return Integer.parseInt(line.trim());
-        }
-
-        @Override
-        public int readIntInRange(int min, int max) {
-            Integer v = readInteger();
-            if (v == null) {
-                throw new IllegalStateException("No input for readIntInRange");
-            }
-            if (v < min || v > max) {
-                throw new IllegalArgumentException("Input out of range: " + v);
-            }
-            return v;
-        }
-
-        @Override
-        public void printlnSuccess(String message) {
-            output.add("SUCCESS: " + message);
-        }
-
-        @Override
-        public void printlnFail(String message) {
-            output.add("FAIL: " + message);
-        }
-
-        @Override
-        public void printlnWarning(String message) {
-            output.add("WARN: " + message);
-        }
-
-        @Override
-        public void printPrompt(String message) {
-            output.add("PROMPT: " + message);
-        }
-
-        @Override
-        public void printlnTitle(String message) {
-            output.add("TITLE: " + message);
-        }
-
-        @Override
-        public void printlnHeader(String message) {
-            output.add("HEADER: " + message);
-        }
-    }
+    // No IO fakes needed: tests cover Model/UseCase only (MVC).
 }
 
 

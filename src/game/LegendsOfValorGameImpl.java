@@ -1,28 +1,36 @@
 package game;
 
+import battle.enums.EquipChoice;
 import battle.enums.HeroActionType;
-import battle.heroAction.BattleActionsConfig;
-import battle.heroAction.BattleContext;
-import battle.heroAction.GameType;
-import battle.heroAction.HeroActionStrategy;
-import battle.menu.BattleMenu;
 import hero.Hero;
 import hero.Party;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import lov.usecase.LovActionExecutor;
+import lov.usecase.LovActionRequest;
+import lov.usecase.LovActionResult;
+import lov.usecase.requests.AttackRequest;
+import lov.usecase.requests.CastSpellRequest;
+import lov.usecase.requests.EquipRequest;
+import lov.usecase.requests.MoveRequest;
+import lov.usecase.requests.RecallRequest;
+import lov.usecase.requests.RemoveObstacleRequest;
+import lov.usecase.requests.TeleportRequest;
+import lov.usecase.requests.UsePotionRequest;
 import market.model.Market;
-import market.service.MarketService;
-import market.service.MarketServiceImpl;
-import market.ui.MarketMenu;
-import market.ui.MarketMenuImpl;
+import market.model.item.Armor;
+import market.model.item.Item;
+import market.model.item.Potion;
+import market.model.item.Spell;
+import market.model.item.Weapon;
 import monster.Monster;
 import monster.MonsterFactory;
+import ui.lov.LovView;
 import utils.GameConstants;
-import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.Tile;
+import worldMap.enums.Direction;
 
 /**
  * Main game loop for Legends of Valor.
@@ -40,76 +48,71 @@ public class LegendsOfValorGameImpl {
 
     private final LegendsOfValorWorldMap worldMap;
     private final Party party;
-    private final BattleMenu battleMenu;
     private final MonsterFactory monsterFactory;
-    private final IOUtils io;
+    private final LovView view;
+    private final LovActionExecutor actionExecutor;
 
     private int round = 1;
     private boolean running = true;
 
     public LegendsOfValorGameImpl(LegendsOfValorWorldMap worldMap,
                                   Party party,
-                                  BattleMenu battleMenu,
                                   MonsterFactory monsterFactory,
-                                  IOUtils io) {
+                                  LovView view) {
         this.worldMap = worldMap;
         this.party = party;
-        this.battleMenu = battleMenu;
         this.monsterFactory = monsterFactory;
-        this.io = io;
+        this.view = view;
+        this.actionExecutor = new LovActionExecutor(worldMap);
     }
 
     public void start() {
-        io.printlnHeader("Starting Legends of Valor...");
+        view.showStarting();
 
         // Spawn the initial wave (one monster per lane)
         spawnMonstersAllLanes();
 
-        Map<HeroActionType, HeroActionStrategy> actions =
-                BattleActionsConfig.createActions(GameType.LEGENDS_OF_VALOR, worldMap, io);
-        BattleContext context = new BattleContext(battleMenu);
-
         while (running) {
-            io.printlnHeader("===== Round " + round + " =====");
-            worldMap.printMap();
-            if (wantsQuitThisRound()) {
-                io.printlnSuccess("Quitting Legends of Valor. Goodbye!");
+            view.showRoundHeader(round);
+            view.renderMap();
+            if (!view.promptContinueOrQuit()) {
+                view.showSuccess("Quitting Legends of Valor. Goodbye!");
                 return;
             }
 
             if (worldMap.isHeroVictory()) {
-                io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
+                view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
             if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
-                io.printlnFail("Monsters win!");
+                view.showFail("Monsters win!");
                 return;
             }
 
-            runHeroesTurn(actions, context);
+            runHeroesTurn();
 
             if (worldMap.isHeroVictory()) {
-                io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
+                view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
             if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
-                io.printlnFail("Monsters win!");
+                view.showFail("Monsters win!");
                 return;
             }
 
             runMonstersTurn();
 
             if (worldMap.isHeroVictory()) {
-                io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
+                view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
             if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
-                io.printlnFail("Monsters win!");
+                view.showFail("Monsters win!");
                 return;
             }
 
             if (round % GameConstants.LOV_MONSTER_SPAWN_INTERVAL == 0) {
-                io.printlnWarning("A new wave of monsters is spawning!");
+                view.showWarning("A new wave of monsters is spawning!");
                 spawnMonstersAllLanes();
             }
 
@@ -117,7 +120,7 @@ public class LegendsOfValorGameImpl {
         }
     }
 
-    private void runHeroesTurn(Map<HeroActionType, HeroActionStrategy> actions, BattleContext context) {
+    private void runHeroesTurn() {
         List<Hero> heroes = party.getHeroes();
 
         for (Hero hero : heroes) {
@@ -125,24 +128,20 @@ public class LegendsOfValorGameImpl {
                 continue;
             }
 
-            maybeEnterMarket(hero);
-
             List<Monster> aliveMonsters = worldMap.getAliveMonsters();
-            battleMenu.showBattleStatus(worldMap.getAliveHeroes(), aliveMonsters);
-
-            HeroActionType actionType = battleMenu.chooseActionForHero(hero, aliveMonsters);
-            if (actionType == HeroActionType.SKIP) {
-                io.printlnWarning(String.format(MessageUtils.SKIP_TURN, hero.getName()));
-                continue;
+            if (maybeEnterMarket(hero)) {
+                view.showSuccess("Quitting Legends of Valor. Goodbye!");
+                return;
             }
+            view.showHeroesAndMonstersStatus(worldMap.getAliveHeroes(), aliveMonsters);
 
-            HeroActionStrategy strategy = actions.get(actionType);
-            if (strategy == null) {
-                io.printlnFail(MessageUtils.UNKNOWN_COMMAND);
-                continue;
+            HeroActionType actionType = view.promptHeroAction(hero, aliveMonsters);
+            LovActionRequest request = buildRequestForAction(actionType, hero, aliveMonsters);
+            LovActionResult result = actionExecutor.execute(actionType, hero, aliveMonsters, request);
+            renderActionResult(result);
+            if (result.shouldRenderMap()) {
+                view.renderMap();
             }
-
-            strategy.execute(hero, aliveMonsters, context, io);
 
             cleanupDeadMonstersAndReward(hero);
 
@@ -152,6 +151,22 @@ public class LegendsOfValorGameImpl {
             if (party.allHeroesDefeated()) {
                 return;
             }
+        }
+    }
+
+    private void renderActionResult(LovActionResult result) {
+        if (result == null) {
+            view.showFail(MessageUtils.UNKNOWN_COMMAND);
+            return;
+        }
+        for (String msg : result.getFailMessages()) {
+            view.showFail(msg);
+        }
+        for (String msg : result.getWarningMessages()) {
+            view.showWarning(msg);
+        }
+        for (String msg : result.getSuccessMessages()) {
+            view.showSuccess(msg);
         }
     }
 
@@ -189,15 +204,15 @@ public class LegendsOfValorGameImpl {
         boolean dodged = heroDodgesWithTerrain(hero);
 
         if (dodged) {
-            io.printlnWarning(String.format(MessageUtils.ATTACK_WAS_DODGED, monster.getName(), hero.getName()));
+            view.showWarning(String.format(MessageUtils.ATTACK_WAS_DODGED, monster.getName(), hero.getName()));
             return;
         }
 
         hero.takeDamage(damage);
-        io.printlnWarning(String.format(MessageUtils.SUCCESSFUL_ATTACK, monster.getName(), hero.getName(), damage));
+        view.showWarning(String.format(MessageUtils.SUCCESSFUL_ATTACK, monster.getName(), hero.getName(), damage));
 
         if (!hero.isAlive()) {
-            io.printlnWarning(String.format(MessageUtils.CHARACTER_FAINTED, hero.getName()));
+            view.showWarning(String.format(MessageUtils.CHARACTER_FAINTED, hero.getName()));
         }
     }
 
@@ -243,42 +258,129 @@ public class LegendsOfValorGameImpl {
         }
     }
 
-    private void maybeEnterMarket(Hero hero) {
+    private boolean maybeEnterMarket(Hero hero) {
         Tile tile = worldMap.getTile(hero.getRow(), hero.getCol());
         if (tile == null) {
-            return;
+            return false;
         }
 
         Market market = tile.getMarket();
         if (market == null) {
-            return;
+            return false;
         }
-
-        io.printPrompt("Enter market for " + hero.getName() + "? (y/n, q to quit): ");
-        String line = io.readLine();
-        if (line.trim().isEmpty()) {
-            return;
-        }
-        char c = Character.toLowerCase(line.trim().charAt(0));
-        if (c == 'q') {
-            io.printlnSuccess("Quitting Legends of Valor. Goodbye!");
+        boolean wantsQuit = view.maybeEnterMarket(hero, market);
+        if (wantsQuit) {
             running = false;
-            return;
+            return true;
         }
-        if (c != 'y') {
-            return;
-        }
-
-        MarketService marketService = new MarketServiceImpl(market, io);
-        MarketMenu marketMenu = new MarketMenuImpl(marketService, io);
-        marketMenu.runMarketSession(hero);
+        return false;
     }
 
-    private boolean wantsQuitThisRound() {
-        io.printPrompt("Press ENTER to continue, or Q to quit: ");
-        String line = io.readLine();
-        String trimmed = line.trim();
-        return !trimmed.isEmpty() && (trimmed.equalsIgnoreCase("q"));
+    private LovActionRequest buildRequestForAction(HeroActionType actionType, Hero hero, List<Monster> aliveMonsters) {
+        if (actionType == null) {
+            return null;
+        }
+
+        switch (actionType) {
+            case MOVE: {
+                Direction dir = view.promptDirection("Choose where " + hero.getName() + " would like to move:", true);
+                return new MoveRequest(dir);
+            }
+            case REMOVE_OBSTACLE: {
+                Direction dir = view.promptDirection("Choose where " + hero.getName() + " would like to remove an obstacle:", true);
+                return new RemoveObstacleRequest(dir);
+            }
+            case TELEPORT: {
+                List<Hero> candidates = new ArrayList<>();
+                for (Hero h : worldMap.getHeroes()) {
+                    if (h != hero && h.isAlive()) {
+                        candidates.add(h);
+                    }
+                }
+                Hero target = view.promptTeleportTarget(hero, candidates);
+                return new TeleportRequest(target);
+            }
+            case RECALL:
+                return new RecallRequest();
+            case ATTACK: {
+                List<Monster> inRange = worldMap.getMonstersInRange(hero);
+                Monster target = view.promptMonsterTarget(hero, inRange);
+                Integer hands = null;
+                Weapon weapon = hero.getEquippedWeapon();
+                if (weapon != null && weapon.getHandsRequired() == 1) {
+                    hands = view.promptHandsForWeapon(hero, weapon);
+                }
+                return new AttackRequest(target, hands);
+            }
+            case CAST_SPELL: {
+                List<Spell> spells = collectSpells(hero);
+                Spell spell = view.promptSpellToCast(hero, spells);
+                List<Monster> inRange = worldMap.getMonstersInRange(hero);
+                Monster target = view.promptMonsterTarget(hero, inRange);
+                return new CastSpellRequest(spell, target);
+            }
+            case USE_POTION: {
+                List<Potion> potions = collectPotions(hero);
+                Potion potion = view.promptPotionToUse(hero, potions);
+                return new UsePotionRequest(potion);
+            }
+            case EQUIP: {
+                EquipChoice choice = view.promptEquipChoice(hero);
+                if (choice == EquipChoice.WEAPON) {
+                    List<Weapon> weapons = collectWeapons(hero);
+                    Weapon w = view.promptWeaponToEquip(hero, weapons);
+                    return new EquipRequest(choice, w, null);
+                } else if (choice == EquipChoice.ARMOR) {
+                    List<Armor> armors = collectArmors(hero);
+                    Armor a = view.promptArmorToEquip(hero, armors);
+                    return new EquipRequest(choice, null, a);
+                }
+                return new EquipRequest(choice, null, null);
+            }
+            case SKIP:
+            default:
+                return null;
+        }
+    }
+
+    private List<Spell> collectSpells(Hero hero) {
+        List<Spell> spells = new ArrayList<>();
+        for (Item item : hero.getInventory()) {
+            if (item instanceof Spell) {
+                spells.add((Spell) item);
+            }
+        }
+        return spells;
+    }
+
+    private List<Potion> collectPotions(Hero hero) {
+        List<Potion> potions = new ArrayList<>();
+        for (Item item : hero.getInventory()) {
+            if (item instanceof Potion) {
+                potions.add((Potion) item);
+            }
+        }
+        return potions;
+    }
+
+    private List<Weapon> collectWeapons(Hero hero) {
+        List<Weapon> weapons = new ArrayList<>();
+        for (Item item : hero.getInventory()) {
+            if (item instanceof Weapon) {
+                weapons.add((Weapon) item);
+            }
+        }
+        return weapons;
+    }
+
+    private List<Armor> collectArmors(Hero hero) {
+        List<Armor> armors = new ArrayList<>();
+        for (Item item : hero.getInventory()) {
+            if (item instanceof Armor) {
+                armors.add((Armor) item);
+            }
+        }
+        return armors;
     }
 }
 
