@@ -2,8 +2,8 @@
 -------------------------------------------------------------
 --------------
 - Name: Azem Kakitaeva, Zhengzheng Tang, Antony Ponomarev
-- Email: azemk@bu.edu, , antonyp@bu.edu
-- Student ID: U51216906, U43948985
+- Email: azemk@bu.edu, zztangbu@bu.edu, antonyp@bu.edu
+- Student ID: U51216906, U07312313, U43948985
 
 
 ## File Structure 
@@ -26,27 +26,25 @@
   LoVRangeUtils.java             // Checks if an attack is within range
 
 /battle/heroAction/impl
-  BaseAtttackAction.java         // Handles the basic attacking feature for heroes
-  BaseCastSpellAction.java       // Handles the basic spell cast for a hero
-  BaseEquipAction.java           // Allows the heroes to equip weapon and armor
-  BaseUsePotionAction.java       //Allows the hero to use a potion
+  BaseAttackAction.java          // Shared base logic for hero basic attack
+  BaseCastSpellAction.java       // Shared base logic for hero spell casting
+  EquipAction.java               // Allows the heroes to equip weapon and armor
+  UsePotionAction.java           // Allows the hero to use a potion
 
 /battle/heroAction/impl/mh
   MHAttackAction.java            // Handles the hero attack specifically within monsters and heroes
-  MHCastSpellAction.java         // Handles the hero's ability to cast spells specifically within monsters and heroes
+  MhCastSpellAction.java         // Handles the hero's ability to cast spells specifically within monsters and heroes
 
 /battle/heroAction/impl/lov
   LoVAttackAction.java           // Handles the hero attack specifically within Legends of Valor
   LoVCastSpellAction.java        // Handles the hero's ability to cast spells specifically within Legends of Valor
- MoveAction.java                 // Handles the hero's ability to move on the board in Legends of Valor
- RecallAction.java               // Handles the hero's ability to recall back to the nexus
- TeleportAction.java             // Handles the hero's ability to teleport to another hero
+  MoveAction.java                 // Handles the hero's ability to move on the board in Legends of Valor
+  RecallAction.java               // Handles the hero's ability to recall back to the nexus
+  TeleportAction.java             // Handles the hero's ability to teleport to another hero
+  RemoveObstacle.java             // Allows a hero to remove an adjacent obstacle tile in Legends of Valor
 
-/battle/heroAction/impl
-  AttackAction.java              // Strategy implementing an attack action
-  CastSpellAction.java           // Strategy implementing spell-casting behavior for heroes
-  EquipAction.java               // Strategy allowing heroes to equip weapons or armor in battle
-  UsePotionAction.java           // Strategy allowing heroes to consume potions during battle
+/entity
+  GamePiece.java                  // Common interface for Hero/Monster (position + alive query)
 
 /battle/menu
   BattleMenu.java                // Interface defining battle-related UI display operations
@@ -128,7 +126,7 @@
   GameConstants.java             // Centralized constants for game 
   IOUtils.java                   // Utility interface for handling generic input/output operations
   MessageUtils.java              // Repository for centralized UI text messages
-  EndOfInputException            // Extends a normal RuntimeException so that user is prompted with a full stack trace.
+  EndOfInputException.java       // Custom RuntimeException used to gracefully exit on EOF (no stack trace)
 
 /worldMap/enums
   Direction.java                 // Enum representing movement directions on the world map
@@ -138,15 +136,16 @@
   MarketTileFeature.java         // Feature class marking a tile as containing a market
   Tile.java                      // Class representing a single grid cell of the world map
   TileFeature.java               // Abstract base class for map tile features
-  WorldMap.java                  // Extends the MonstersAndHeroesWorldMap.java to keep compatability with previous version.
+  WorldMap.java                  // Compatibility wrapper around MonstersAndHeroesWorldMap (legacy)
   MonstersAndHeroesWorldMap.java // Implementation of the world map for Monsters and Heroes
   LegendsOfValorWorldMap.java    // Implements the world map for Legends of valor
+  ILegendsWorldMap.java          // World map extension used by Legends of Valor actions
   IWorldMap.java                 // General interface for creating world maps for different games
 
 /worldMap/feature
   BushFeature.java               // Handles the bushes on the map, extends TerrainBonusFeature
   CaveFeature.java               // Handles the caves on the map, extends TerrainBonusFeature
-  KouloFeature.java              // Handles the Koulou's on the map, extends TerrainBonusFeature
+  KoulouFeature.java             // Handles the Koulou tiles on the map, extends TerrainBonusFeature
   NexusFeature.java              // Handles the Nexus's on the map
   TerrainBonusFeature.java       // Abstract class that can be implemented by bush/cave/koulo that gives heroes stats boosts
 ```
@@ -173,7 +172,7 @@
 
     * **Model Layer**: Hero, Monster, Item hierarchy, Market, WorldMap, Party.
     * **Logic Layer**: BattleEngine, HeroActionStrategy, MonsterFactory, MarketService, MarketCommand.
-    * **Infrastructure Layer**: File loaders (`upload.*`), RuleConstants, ConsoleColors, IOUtils, centralized MessageUtils.
+    * **Infrastructure Layer**: File loaders (`upload.*`), GameConstants, ConsoleColors, IOUtils, centralized MessageUtils.
       This structure makes the codebase easy to understand, test and extend.
 
 * **Scalable & Extensible Design**
@@ -197,10 +196,10 @@ This improves readability, explains design intent and makes the system easier to
 
 ## Steps to Run
 
-1. Download the `src` folder.
-2. Open terminal/command prompt and navigate to the folder:
+1. Download/clone the repository (make sure `src/` and `files/` are both present).
+2. Open terminal/command prompt and navigate to the project root folder (the folder containing `src/`):
 ```bash
-cd ~/IdeaProjects/monstersAndHeroes
+cd /path/to/oop_monsters_and_heroes
 ```
 3. Compile the code:
 ```bash
