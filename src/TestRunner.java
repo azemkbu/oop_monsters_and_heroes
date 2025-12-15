@@ -1098,6 +1098,11 @@ public class TestRunner {
         public void showRoundHeader(int round) { roundHeaders++; }
 
         @Override
+        public void refreshDisplay(int round, List<Hero> heroes, List<Monster> monsters) {
+            // Fake implementation - no-op (roundHeaders tracked by showRoundHeader)
+        }
+
+        @Override
         public void renderMap() {}
 
         @Override

@@ -22,6 +22,12 @@ public interface LovView {
 
     void showRoundHeader(int round);
 
+    /**
+     * Clears the screen and redraws the map + status panels.
+     * Used for "refresh" mode UI instead of endless scrolling.
+     */
+    void refreshDisplay(int round, List<Hero> heroes, List<Monster> monsters);
+
     void renderMap();
 
     /**

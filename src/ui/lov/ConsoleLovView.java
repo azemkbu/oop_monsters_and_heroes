@@ -55,6 +55,21 @@ public final class ConsoleLovView implements LovView {
     }
 
     @Override
+    public void refreshDisplay(int round, List<Hero> heroes, List<Monster> monsters) {
+        // Clear screen first
+        io.clearScreen();
+
+        // Show round header
+        showRoundHeader(round);
+
+        // Render map
+        renderMap();
+
+        // Show status panels
+        showHeroesAndMonstersStatus(heroes, monsters);
+    }
+
+    @Override
     public void renderMap() {
         List<RenderedLine> lines = mapFormatter.render(worldMap);
         for (RenderedLine line : lines) {
@@ -76,7 +91,7 @@ public final class ConsoleLovView implements LovView {
     @Override
     public void showHeroesAndMonstersStatus(List<Hero> heroes, List<Monster> monsters) {
         io.printlnTitle(MessageUtils.DEFAULT_LINE_HEADER);
-        io.printlnHeader(MessageUtils.BATTLE_INFO_HEADER);
+        io.printlnHeader("======= STATUS =======");
         io.printlnTitle("Heroes:");
         for (Hero h : heroes) {
             io.printlnTitle("  - " + h);

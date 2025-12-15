@@ -84,14 +84,16 @@ public class LegendsOfValorGameImpl {
         spawnMonstersAllLanes();
 
         while (running) {
+            // Dis.txt: dead heroes respawn at the start of the next round at their specific nexus with full HP/MP.
+            respawnDeadHeroesAtRoundStart();
+
+            // Show round header and initial map at the start of each round
             view.showRoundHeader(round);
             view.renderMap();
+
             if (!view.promptContinueOrQuit()) {
                 return;
             }
-
-            // Dis.txt: dead heroes respawn at the start of the next round at their specific nexus with full HP/MP.
-            respawnDeadHeroesAtRoundStart();
 
             if (worldMap.isHeroVictory()) {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -162,19 +164,20 @@ public class LegendsOfValorGameImpl {
             }
 
             List<Monster> aliveMonsters = worldMap.getAliveMonsters();
+
+            // Refresh display before each hero's turn (clear screen + redraw map + status)
+            view.refreshDisplay(round, worldMap.getAliveHeroes(), aliveMonsters);
+
             if (maybeEnterMarket(hero)) {
                 view.showSuccess("Quitting Legends of Valor. Goodbye!");
                 return;
             }
-            view.showHeroesAndMonstersStatus(worldMap.getAliveHeroes(), aliveMonsters);
 
             HeroActionType actionType = view.promptHeroAction(hero, aliveMonsters);
             LovActionRequest request = buildRequestForAction(actionType, hero, aliveMonsters);
             LovActionResult result = actionExecutor.execute(actionType, hero, aliveMonsters, request);
             renderActionResult(result);
-            if (result.shouldRenderMap()) {
-                view.renderMap();
-            }
+            // Map will be refreshed at the start of the next hero's turn
 
             cleanupDeadMonstersAndReward(hero);
 

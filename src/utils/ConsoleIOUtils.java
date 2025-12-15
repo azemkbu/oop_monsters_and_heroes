@@ -83,4 +83,11 @@ public class ConsoleIOUtils implements IOUtils {
     public void printlnHeader(String message) {
         println(BOLD + ORANGE + message + RESET);
     }
+
+    @Override
+    public void clearScreen() {
+        // ANSI escape code to clear screen and move cursor to top-left
+        System.out.print("\033[2J\033[H");
+        System.out.flush();
+    }
 }

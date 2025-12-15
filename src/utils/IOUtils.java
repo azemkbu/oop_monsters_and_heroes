@@ -22,4 +22,9 @@ public interface IOUtils {
     void printlnTitle(String message);
 
     void printlnHeader(String message);
+
+    /**
+     * Clears the console screen.
+     */
+    void clearScreen();
 }
