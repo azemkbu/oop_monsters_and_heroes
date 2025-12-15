@@ -158,7 +158,12 @@ public final class LegendsMapFormatter {
         } else {
             // Empty cell: use terrain color
             cellStr.append(getBackgroundColor(tile, row));
-            cellStr.append("    ");
+            // Show X for obstacles so they're visible
+            if (tile != null && tile.getType() == TileType.OBSTACLE) {
+                cellStr.append(" ▓▓ ");
+            } else {
+                cellStr.append("    ");
+            }
             cellStr.append(RESET);
         }
 
