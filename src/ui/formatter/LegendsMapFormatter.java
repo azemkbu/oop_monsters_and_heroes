@@ -27,7 +27,8 @@ public final class LegendsMapFormatter {
         // Column headers
         StringBuilder header = new StringBuilder("    ");
         for (int col = 0; col < size; col++) {
-            header.append(String.format(" %d  ", col));
+            // cell width is 5, plus a space padding in header
+            header.append(String.format("  %d   ", col));
         }
         lines.add(new RenderedLine(LineKind.TITLE, header.toString()));
 
@@ -59,45 +60,40 @@ public final class LegendsMapFormatter {
     }
 
     private String getCellContent(ILegendsWorldMap map, int row, int col, Tile tile) {
-        // Check for hero at this position
-        String heroChar = " ";
+        // Check for hero at this position (index-based: H1/H2/H3)
+        String hero = "  ";
         int heroIndex = 0;
         for (Hero h : map.getHeroes()) {
             int[] pos = map.getHeroPosition(h);
             if (pos != null && pos[0] == row && pos[1] == col) {
-                heroChar = "H" + (heroIndex + 1);
+                hero = "H" + (heroIndex + 1);
                 break;
             }
             heroIndex++;
         }
 
-        // Check for monster at this position
-        String monsterChar = " ";
+        // Check for monster at this position (index-based: M1/M2/M3)
+        String monster = "  ";
         int monsterIndex = 0;
         for (Monster m : map.getMonsters()) {
             int[] pos = map.getMonsterPosition(m);
             if (pos != null && pos[0] == row && pos[1] == col) {
-                monsterChar = "M" + (monsterIndex + 1);
+                monster = "M" + (monsterIndex + 1);
                 break;
             }
             monsterIndex++;
         }
 
-        // Format: "XTY" where X=hero, T=tile type, Y=monster
+        // Dis.txt: a cell may contain up to one hero and up to one monster.
+        // Render format (fixed 5 chars): "H1" + tileSymbol + "M2"
         String tileSymbol = tile.getType().getSymbol();
         String colorCode = getTileColor(tile.getType());
 
         StringBuilder content = new StringBuilder();
         content.append(colorCode);
-
-        if (!heroChar.equals(" ") || !monsterChar.equals(" ")) {
-            content.append(heroChar.equals(" ") ? " " : heroChar.charAt(0));
-            content.append(tileSymbol);
-            content.append(monsterChar.equals(" ") ? " " : monsterChar.charAt(0));
-        } else {
-            content.append(" ").append(tileSymbol).append(" ");
-        }
-
+        content.append(String.format("%-2s", hero));
+        content.append(tileSymbol);
+        content.append(String.format("%-2s", monster));
         content.append(RESET);
         return content.toString();
     }
@@ -125,7 +121,7 @@ public final class LegendsMapFormatter {
     private String buildRowBorder(int size) {
         StringBuilder border = new StringBuilder("   +");
         for (int col = 0; col < size; col++) {
-            border.append("---+");
+            border.append("-----+");
         }
         return border.toString();
     }
