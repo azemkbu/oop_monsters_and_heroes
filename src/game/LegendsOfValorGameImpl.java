@@ -17,7 +17,6 @@ import lov.usecase.requests.RecallRequest;
 import lov.usecase.requests.RemoveObstacleRequest;
 import lov.usecase.requests.TeleportRequest;
 import lov.usecase.requests.UsePotionRequest;
-import market.model.Market;
 import market.model.item.Armor;
 import market.model.item.Item;
 import market.model.item.Potion;
@@ -168,16 +167,30 @@ public class LegendsOfValorGameImpl {
             // Refresh display before each hero's turn (clear screen + redraw map + status)
             view.refreshDisplay(round, worldMap.getAliveHeroes(), aliveMonsters);
 
-            if (maybeEnterMarket(hero)) {
+            // Check if hero is on a Nexus (for Market option)
+            Tile currentTile = worldMap.getTile(hero.getRow(), hero.getCol());
+            boolean isOnNexus = (currentTile != null && currentTile.getMarket() != null);
+
+            // Prompt for action using letter commands (WASD for move, K for attack, M for market, etc.)
+            HeroActionType actionType = view.promptHeroAction(hero, aliveMonsters, isOnNexus);
+
+            // Handle quit (user pressed Q)
+            if (actionType == null) {
                 view.showSuccess("Quitting Legends of Valor. Goodbye!");
+                running = false;
                 return;
             }
 
-            HeroActionType actionType = view.promptHeroAction(hero, aliveMonsters);
+            // Handle market (user pressed M while on Nexus)
+            if (actionType == HeroActionType.MARKET) {
+                view.runMarketSession(hero, currentTile.getMarket());
+                // After market, this hero's turn ends
+                continue;
+            }
+
             LovActionRequest request = buildRequestForAction(actionType, hero, aliveMonsters);
             LovActionResult result = actionExecutor.execute(actionType, hero, aliveMonsters, request);
             renderActionResult(result);
-            // Map will be refreshed at the start of the next hero's turn
 
             cleanupDeadMonstersAndReward(hero);
 
@@ -294,24 +307,6 @@ public class LegendsOfValorGameImpl {
         }
     }
 
-    private boolean maybeEnterMarket(Hero hero) {
-        Tile tile = worldMap.getTile(hero.getRow(), hero.getCol());
-        if (tile == null) {
-            return false;
-        }
-
-        Market market = tile.getMarket();
-        if (market == null) {
-            return false;
-        }
-        boolean wantsQuit = view.maybeEnterMarket(hero, market);
-        if (wantsQuit) {
-            running = false;
-            return true;
-        }
-        return false;
-    }
-
     private LovActionRequest buildRequestForAction(HeroActionType actionType, Hero hero, List<Monster> aliveMonsters) {
         if (actionType == null) {
             return null;
@@ -319,7 +314,8 @@ public class LegendsOfValorGameImpl {
 
         switch (actionType) {
             case MOVE: {
-                Direction dir = view.promptDirection("Choose where " + hero.getName() + " would like to move:", true);
+                // Direction already captured from WASD input
+                Direction dir = view.getLastMoveDirection();
                 return new MoveRequest(dir);
             }
             case REMOVE_OBSTACLE: {

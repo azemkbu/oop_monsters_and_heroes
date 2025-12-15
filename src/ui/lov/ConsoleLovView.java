@@ -26,11 +26,15 @@ import java.util.List;
 
 /**
  * Console implementation of {@link LovView}.
+ * Uses letter commands (W/A/S/D for movement, K for attack, etc.) instead of number menus.
  */
 public final class ConsoleLovView implements LovView {
     private final IOUtils io;
     private final ILegendsWorldMap worldMap;
     private final LegendsMapFormatter mapFormatter;
+
+    // Stores the direction from last WASD input (used when MOVE is returned)
+    private Direction lastMoveDirection = null;
 
     public ConsoleLovView(IOUtils io, ILegendsWorldMap worldMap) {
         this(io, worldMap, new LegendsMapFormatter());
@@ -56,16 +60,9 @@ public final class ConsoleLovView implements LovView {
 
     @Override
     public void refreshDisplay(int round, List<Hero> heroes, List<Monster> monsters) {
-        // Clear screen first
         io.clearScreen();
-
-        // Show round header
         showRoundHeader(round);
-
-        // Render map
         renderMap();
-
-        // Show status panels
         showHeroesAndMonstersStatus(heroes, monsters);
     }
 
@@ -83,8 +80,6 @@ public final class ConsoleLovView implements LovView {
 
     @Override
     public boolean promptContinueOrQuit() {
-        // Keep the LoV UI identical to the original version: no "press enter to continue" prompt.
-        // The game continues immediately each round; quitting is handled by outer application / EOF.
         return true;
     }
 
@@ -104,52 +99,125 @@ public final class ConsoleLovView implements LovView {
     }
 
     @Override
-    public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters) {
-        io.printlnSuccess(String.format(MessageUtils.CURRENT_TURN, hero.getName()));
+    public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus) {
+        // Show hero turn header
+        io.printlnSuccess(String.format("═══════ %s's Turn ═══════", hero.getName()));
 
-        HeroActionType[] options = HeroActionType.values();
-        for (int i = 0; i < options.length; i++) {
-            io.printlnTitle(String.format("%d) %s", i + 1, options[i].getLabel()));
+        // Show command options
+        io.printlnTitle(" Movement: [W]Up  [S]Down  [A]Left  [D]Right");
+        io.printlnTitle(" Combat:   [K]Attack  [C]Cast Spell  [P]Potion  [E]Equip");
+        if (isOnNexus) {
+            io.printlnTitle(" Special:  [T]Teleport  [B]Recall  [M]Market  [R]Remove Obstacle");
+        } else {
+            io.printlnTitle(" Special:  [T]Teleport  [B]Recall  [R]Remove Obstacle");
         }
-        io.printPrompt(MessageUtils.ENTER_CHOICE);
-        int choice = io.readIntInRange(1, options.length);
-        return options[choice - 1];
+        io.printlnTitle(" Other:    [I]Info  [Q]Quit");
+
+        while (true) {
+            io.printPrompt("Enter command: ");
+            String line = io.readLine();
+            if (line == null || line.trim().isEmpty()) {
+                io.printlnFail("Please enter a command.");
+                continue;
+            }
+
+            char cmd = Character.toUpperCase(line.trim().charAt(0));
+            switch (cmd) {
+                // Movement - WASD directly moves
+                case 'W':
+                    lastMoveDirection = Direction.UP;
+                    return HeroActionType.MOVE;
+                case 'A':
+                    lastMoveDirection = Direction.LEFT;
+                    return HeroActionType.MOVE;
+                case 'S':
+                    lastMoveDirection = Direction.DOWN;
+                    return HeroActionType.MOVE;
+                case 'D':
+                    lastMoveDirection = Direction.RIGHT;
+                    return HeroActionType.MOVE;
+
+                // Combat
+                case 'K':
+                    return HeroActionType.ATTACK;
+                case 'C':
+                    return HeroActionType.CAST_SPELL;
+                case 'P':
+                    return HeroActionType.USE_POTION;
+                case 'E':
+                    return HeroActionType.EQUIP;
+
+                // Special
+                case 'T':
+                    return HeroActionType.TELEPORT;
+                case 'B':
+                    return HeroActionType.RECALL;
+                case 'M':
+                    if (isOnNexus) {
+                        return HeroActionType.MARKET;
+                    }
+                    io.printlnFail("Market is only available at Nexus!");
+                    break;
+                case 'R':
+                    return HeroActionType.REMOVE_OBSTACLE;
+
+                // Other
+                case 'I':
+                    showHeroInfo(hero);
+                    break;
+                case 'Q':
+                    return null; // Signal to quit
+
+                default:
+                    io.printlnFail("Unknown command. Use W/A/S/D to move, K to attack, etc.");
+            }
+        }
+    }
+
+    private void showHeroInfo(Hero hero) {
+        io.printlnHeader("═══════ HERO INFO ═══════");
+        io.printlnTitle("  Name: " + hero.getName());
+        io.printlnTitle("  Class: " + hero.getHeroClassName());
+        io.printlnTitle("  Level: " + hero.getLevel());
+        io.printlnTitle("  HP: " + hero.getHp() + "/" + hero.getMaxHp());
+        io.printlnTitle("  MP: " + hero.getMp() + "/" + hero.getMaxMp());
+        io.printlnTitle("  Strength: " + hero.getStrength());
+        io.printlnTitle("  Dexterity: " + hero.getDexterity());
+        io.printlnTitle("  Agility: " + hero.getAgility());
+        io.printlnTitle("  Gold: " + hero.getGold());
+        io.printlnTitle("  Weapon: " + (hero.getEquippedWeapon() != null ? hero.getEquippedWeapon().getName() : "None"));
+        io.printlnTitle("  Armor: " + (hero.getEquippedArmor() != null ? hero.getEquippedArmor().getName() : "None"));
+        io.printlnHeader("═════════════════════════");
+    }
+
+    @Override
+    public Direction getLastMoveDirection() {
+        return lastMoveDirection;
     }
 
     @Override
     public Direction promptDirection(String prompt, boolean allowCancel) {
         while (true) {
             io.printlnTitle(prompt);
-            io.printlnTitle("  W = Up");
-            io.printlnTitle("  S = Down");
-            io.printlnTitle("  A = Left");
-            io.printlnTitle("  D = Right");
-            if (allowCancel) {
-                io.printlnTitle("  Q = Cancel");
-            }
-            io.printPrompt("Enter direction (W/A/S/D" + (allowCancel ? " or Q" : "") + "): ");
+            io.printlnTitle("  W = Up, S = Down, A = Left, D = Right" + (allowCancel ? ", Q = Cancel" : ""));
+            io.printPrompt("Enter direction: ");
 
             String line = io.readLine();
             if (line == null || line.trim().isEmpty()) {
-                io.printlnFail("Invalid input, please use W/A/S/D" + (allowCancel ? " or Q." : "."));
+                io.printlnFail("Please enter a direction.");
                 continue;
             }
             char input = Character.toUpperCase(line.trim().charAt(0));
             switch (input) {
-                case 'W':
-                    return Direction.UP;
-                case 'S':
-                    return Direction.DOWN;
-                case 'A':
-                    return Direction.LEFT;
-                case 'D':
-                    return Direction.RIGHT;
+                case 'W': return Direction.UP;
+                case 'S': return Direction.DOWN;
+                case 'A': return Direction.LEFT;
+                case 'D': return Direction.RIGHT;
                 case 'Q':
                     if (allowCancel) return null;
-                    io.printlnFail("Invalid input, please use W/A/S/D.");
-                    break;
+                    // fall through
                 default:
-                    io.printlnFail("Invalid input, please use W/A/S/D" + (allowCancel ? " or Q." : "."));
+                    io.printlnFail("Invalid input.");
             }
         }
     }
@@ -159,19 +227,16 @@ public final class ConsoleLovView implements LovView {
         if (monsters == null || monsters.isEmpty()) {
             return null;
         }
-        io.printPrompt(MessageUtils.CHOOSE_MONSTER_TO_TARGET_MESSAGE);
+        io.printlnTitle("Choose a monster to target:");
         for (int i = 0; i < monsters.size(); i++) {
             Monster m = monsters.get(i);
-            io.printlnTitle(String.format(
-                    "  [%d] %s (Level %d, HP %d)",
-                    i + 1,
-                    m.getName(),
-                    m.getLevel(),
-                    m.getHp()
-            ));
+            io.printlnTitle(String.format("  [%d] %s (Level %d, HP %d)",
+                    i + 1, m.getName(), m.getLevel(), m.getHp()));
         }
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
-        int choice = io.readIntInRange(1, monsters.size());
+        int choice = io.readIntInRange(0, monsters.size());
+        if (choice == 0) return null;
         return monsters.get(choice - 1);
     }
 
@@ -184,21 +249,14 @@ public final class ConsoleLovView implements LovView {
         for (int i = 0; i < candidates.size(); i++) {
             Hero h = candidates.get(i);
             int[] pos = worldMap.getHeroPosition(h);
-            io.printlnTitle(String.format(
-                    "  [%d] %s  [lane=%d, row=%d, col=%d]",
-                    i + 1,
-                    h.getName(),
-                    worldMap.getHeroLane(h),
-                    pos == null ? -1 : pos[0],
-                    pos == null ? -1 : pos[1]
-            ));
+            io.printlnTitle(String.format("  [%d] %s  [lane=%d, row=%d, col=%d]",
+                    i + 1, h.getName(), worldMap.getHeroLane(h),
+                    pos == null ? -1 : pos[0], pos == null ? -1 : pos[1]));
         }
-        io.printlnTitle(MessageUtils.CANCEL_LINE);
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
         int choice = io.readIntInRange(0, candidates.size());
-        if (choice == 0) {
-            return null;
-        }
+        if (choice == 0) return null;
         return candidates.get(choice - 1);
     }
 
@@ -207,19 +265,13 @@ public final class ConsoleLovView implements LovView {
         if (spells == null || spells.isEmpty()) {
             return null;
         }
-        io.printlnHeader(String.format(MessageUtils.CHOOSE_ITEM_TO_USE_BY_TYPE, ItemType.SPELL));
+        io.printlnHeader("Choose a spell to cast:");
         for (int i = 0; i < spells.size(); i++) {
             Spell s = spells.get(i);
-            io.printlnTitle(String.format(
-                    "  [%d] %s (Damage %d, ManaCost %d, Level %d)",
-                    i + 1,
-                    s.getName(),
-                    s.getDamage(),
-                    s.getManaCost(),
-                    s.getLevel()
-            ));
+            io.printlnTitle(String.format("  [%d] %s (Damage %d, ManaCost %d)",
+                    i + 1, s.getName(), s.getDamage(), s.getManaCost()));
         }
-        io.printlnTitle(MessageUtils.CANCEL_LINE);
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
         int choice = io.readIntInRange(0, spells.size());
         if (choice == 0) return null;
@@ -231,19 +283,13 @@ public final class ConsoleLovView implements LovView {
         if (potions == null || potions.isEmpty()) {
             return null;
         }
-        io.printlnHeader(String.format(MessageUtils.CHOOSE_ITEM_TO_USE_BY_TYPE, ItemType.POTION));
+        io.printlnHeader("Choose a potion to use:");
         for (int i = 0; i < potions.size(); i++) {
             Potion p = potions.get(i);
-            io.printlnTitle(String.format(
-                    "  [%d] %s (Type %s, Effect %.0f, Level %d)",
-                    i + 1,
-                    p.getName(),
-                    p.getStatType(),
-                    p.getEffectAmount(),
-                    p.getLevel()
-            ));
+            io.printlnTitle(String.format("  [%d] %s (%s +%.0f)",
+                    i + 1, p.getName(), p.getStatType(), p.getEffectAmount()));
         }
-        io.printlnTitle(MessageUtils.CANCEL_LINE);
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
         int choice = io.readIntInRange(0, potions.size());
         if (choice == 0) return null;
@@ -252,14 +298,17 @@ public final class ConsoleLovView implements LovView {
 
     @Override
     public EquipChoice promptEquipChoice(Hero hero) {
-        io.printlnTitle(MessageUtils.ENTER_CHOICE);
-        EquipChoice[] options = EquipChoice.values();
-        for (int i = 0; i < options.length; i++) {
-            io.printlnTitle(String.format("%d) %s", i + 1, options[i].getLabel()));
-        }
+        io.printlnTitle("What do you want to equip?");
+        io.printlnTitle("  [1] Weapon");
+        io.printlnTitle("  [2] Armor");
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
-        int choiceIndex = io.readIntInRange(1, options.length);
-        return options[choiceIndex - 1];
+        int choice = io.readIntInRange(0, 2);
+        switch (choice) {
+            case 1: return EquipChoice.WEAPON;
+            case 2: return EquipChoice.ARMOR;
+            default: return EquipChoice.CANCEL;
+        }
     }
 
     @Override
@@ -267,18 +316,13 @@ public final class ConsoleLovView implements LovView {
         if (weapons == null || weapons.isEmpty()) {
             return null;
         }
-        io.printlnHeader(String.format(MessageUtils.CHOOSE_ITEM_TO_USE_BY_TYPE, ItemType.WEAPON));
+        io.printlnHeader("Choose a weapon to equip:");
         for (int i = 0; i < weapons.size(); i++) {
             Weapon w = weapons.get(i);
-            io.printlnTitle(String.format(
-                    "  [%d] %s (Damage %d, Level %d)",
-                    i + 1,
-                    w.getName(),
-                    w.getDamage(),
-                    w.getLevel()
-            ));
+            io.printlnTitle(String.format("  [%d] %s (Damage %d, Hands %d)",
+                    i + 1, w.getName(), w.getDamage(), w.getHandsRequired()));
         }
-        io.printlnTitle(MessageUtils.CANCEL_LINE);
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
         int choice = io.readIntInRange(0, weapons.size());
         if (choice == 0) return null;
@@ -290,18 +334,13 @@ public final class ConsoleLovView implements LovView {
         if (armors == null || armors.isEmpty()) {
             return null;
         }
-        io.printlnHeader(String.format(MessageUtils.CHOOSE_ITEM_TO_USE_BY_TYPE, ItemType.ARMOR));
+        io.printlnHeader("Choose armor to equip:");
         for (int i = 0; i < armors.size(); i++) {
             Armor a = armors.get(i);
-            io.printlnTitle(String.format(
-                    "  [%d] %s (Reduction %d, Level %d)",
-                    i + 1,
-                    a.getName(),
-                    a.getDamageReduction(),
-                    a.getLevel()
-            ));
+            io.printlnTitle(String.format("  [%d] %s (Reduction %d)",
+                    i + 1, a.getName(), a.getDamageReduction()));
         }
-        io.printlnTitle(MessageUtils.CANCEL_LINE);
+        io.printlnTitle("  [0] Cancel");
         io.printPrompt(MessageUtils.ENTER_CHOICE);
         int choice = io.readIntInRange(0, armors.size());
         if (choice == 0) return null;
@@ -313,45 +352,22 @@ public final class ConsoleLovView implements LovView {
         if (weapon.getHandsRequired() == 2) {
             return 2;
         }
-
-        while (true) {
-            io.printlnHeader(
-                    hero.getName() + " is using " + weapon.getName()
-                            + " (one-handed).\n"
-                            + "Choose how to wield it:\n"
-                            + "  [1] One hand (normal damage)\n"
-                            + "  [2] Two hands (increased weapon damage)"
-            );
-            io.printPrompt(MessageUtils.ENTER_CHOICE);
-            Integer input = io.readInteger();
-            if (input != null && (input == 1 || input == 2)) {
-                return input;
-            }
-            io.printlnFail(MessageUtils.UNKNOWN_COMMAND);
-        }
+        io.printlnHeader(hero.getName() + " is using " + weapon.getName() + " (one-handed).");
+        io.printlnTitle("  [1] One hand (normal damage)");
+        io.printlnTitle("  [2] Two hands (increased damage)");
+        io.printPrompt(MessageUtils.ENTER_CHOICE);
+        return io.readIntInRange(1, 2);
     }
 
     @Override
-    public boolean maybeEnterMarket(Hero hero, Market market) {
+    public void runMarketSession(Hero hero, Market market) {
         if (market == null) {
-            return false;
+            io.printlnFail("No market available here!");
+            return;
         }
-
-        // Match the original LOV prompt format exactly.
-        io.printPrompt("Enter market for " + hero.getName() + "? (y/n): ");
-        String line = io.readLine();
-        if (line == null || line.trim().isEmpty()) {
-            return false;
-        }
-        char c = Character.toLowerCase(line.trim().charAt(0));
-        if (c != 'y') {
-            return false;
-        }
-
         MarketService marketService = new MarketServiceImpl(market);
         MarketMenu marketMenu = new MarketMenuImpl(marketService, io);
         marketMenu.runMarketSession(hero);
-        return false;
     }
 
     @Override
@@ -369,5 +385,3 @@ public final class ConsoleLovView implements LovView {
         io.printlnWarning(message);
     }
 }
-
-

@@ -37,7 +37,22 @@ public interface LovView {
 
     void showHeroesAndMonstersStatus(List<Hero> heroes, List<Monster> monsters);
 
-    HeroActionType promptHeroAction(Hero hero, List<Monster> monsters);
+    /**
+     * Prompts for hero action using letter commands (W/A/S/D for move, K for attack, etc.)
+     * Returns the action type and direction (for movement) in one step.
+     * 
+     * @param hero The current hero
+     * @param monsters Alive monsters on the map
+     * @param isOnNexus Whether the hero is currently on a Nexus (enables Market option)
+     * @return The chosen action type, or null if user wants to quit
+     */
+    HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus);
+
+    /**
+     * Gets the direction from the last WASD input (used after promptHeroAction returns MOVE).
+     * @return The direction from the last movement command
+     */
+    Direction getLastMoveDirection();
 
     Direction promptDirection(String prompt, boolean allowCancel);
 
@@ -58,10 +73,10 @@ public interface LovView {
     int promptHandsForWeapon(Hero hero, Weapon weapon);
 
     /**
-     * Market entry prompt + handling belongs to View.
-     * @return true if the user requested to quit the game, false otherwise
+     * Runs the market session for a hero (called when user inputs 'M').
+     * No confirmation prompt - user already chose to enter market.
      */
-    boolean maybeEnterMarket(Hero hero, Market market);
+    void runMarketSession(Hero hero, Market market);
 
     void showSuccess(String message);
 

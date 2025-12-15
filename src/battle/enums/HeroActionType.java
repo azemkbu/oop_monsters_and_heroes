@@ -13,7 +13,8 @@ public enum HeroActionType {
     MOVE("Move"),
     TELEPORT("Teleport"),
     RECALL("Recall"),
-    REMOVE_OBSTACLE("Remove Obstacle");
+    REMOVE_OBSTACLE("Remove Obstacle"),
+    MARKET("Market");
 
     private final String label;
 

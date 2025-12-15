@@ -695,25 +695,24 @@ public class TestRunner {
     }
 
     private static void lov_controller_marketQuit_stopsImmediately() {
+        // Now tests that returning null from promptHeroAction (user pressed Q) stops the game
         LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
         makeLovDeterministicPlain(map);
 
         Party party = new Party(3);
         Hero h1 = newHero("H1");
         party.addHero(h1);
-        map.placeHeroAtNexus(h1, 0); // nexus has market
+        map.placeHeroAtNexus(h1, 0);
 
         IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(new TestMonster("M1", 1, false, 10, 10, 10)));
         FakeLovView view = new FakeLovView().withContinueCalls(true);
-        view.marketQuit = true;
+        view.defaultAction = null; // Simulate user pressing Q to quit
 
         LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(map, party, factory, view, new FixedRandom(0.99, 0));
         game.start();
 
-        assertTrue(view.marketCalled > 0, "Market hook should be called");
-        assertTrue(view.successCount > 0, "Market quit should show success and stop");
-        // Ensure the game didn't proceed into monsters turn (would cause additional map renders / round headers)
-        assertTrue(view.roundHeaders <= 1, "Game should stop immediately after market quit");
+        assertTrue(view.successCount > 0, "Quit should show success goodbye message");
+        assertTrue(view.roundHeaders <= 1, "Game should stop immediately after quit");
     }
 
     private static void lov_market_buySell_and_failBranches() {
@@ -1076,7 +1075,6 @@ public class TestRunner {
         private int continueIdx = 0;
 
         HeroActionType defaultAction = HeroActionType.SKIP;
-        boolean marketQuit = false;
 
         int successCount = 0;
         int failCount = 0;
@@ -1117,7 +1115,12 @@ public class TestRunner {
         public void showHeroesAndMonstersStatus(List<Hero> heroes, List<Monster> monsters) {}
 
         @Override
-        public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters) { return defaultAction; }
+        public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus) {
+            return defaultAction;
+        }
+
+        @Override
+        public Direction getLastMoveDirection() { return Direction.UP; }
 
         @Override
         public Direction promptDirection(String prompt, boolean allowCancel) { return null; }
@@ -1159,9 +1162,8 @@ public class TestRunner {
         public int promptHandsForWeapon(Hero hero, Weapon weapon) { return 1; }
 
         @Override
-        public boolean maybeEnterMarket(Hero hero, Market market) {
+        public void runMarketSession(Hero hero, Market market) {
             marketCalled++;
-            return marketQuit;
         }
 
         @Override
