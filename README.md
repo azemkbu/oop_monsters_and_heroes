@@ -10,45 +10,15 @@
 
 ```text
 /battle/engine
-  BattleEngine.java              // Interface defining the contract for executing battles
-  BattleEngineImpl.java          // Implementation of the battle engine handling battle flow
+  BattleEngine.java              // Battle engine contract
+  BattleEngineImpl.java          // Turn-based battle flow (MH battles), RNG-injectable for deterministic tests
 
 /battle/enums
-  EquipChoice.java               // Enum representing possible equipment choices
-  HeroActionType.java            // Enum representing available hero actions during battle
-
-/battle/heroAction
-  HeroActionStrategy.java        // Strategy interface representing a hero’s chosen action logic
-  BattleActionsConfig.java       // Configuration class mapping action types to strategies
-  BattleContext.java             // Context class containing shared state for ongoing battles
-
-/battle/heroAction/helper
-  LoVRangeUtils.java             // Checks if an attack is within range
-
-/battle/heroAction/impl
-  BaseAttackAction.java          // Shared base logic for hero basic attack
-  BaseCastSpellAction.java       // Shared base logic for hero spell casting
-  EquipAction.java               // Allows the heroes to equip weapon and armor
-  UsePotionAction.java           // Allows the hero to use a potion
-
-/battle/heroAction/impl/mh
-  MHAttackAction.java            // Handles the hero attack specifically within monsters and heroes
-  MhCastSpellAction.java         // Handles the hero's ability to cast spells specifically within monsters and heroes
-
-/battle/heroAction/impl/lov
-  LoVAttackAction.java           // Handles the hero attack specifically within Legends of Valor
-  LoVCastSpellAction.java        // Handles the hero's ability to cast spells specifically within Legends of Valor
-  MoveAction.java                 // Handles the hero's ability to move on the board in Legends of Valor
-  RecallAction.java               // Handles the hero's ability to recall back to the nexus
-  TeleportAction.java             // Handles the hero's ability to teleport to another hero
-  RemoveObstacle.java             // Allows a hero to remove an adjacent obstacle tile in Legends of Valor
+  EquipChoice.java               // Weapon/Armor/Cancel
+  HeroActionType.java            // ATTACK/CAST_SPELL/USE_POTION/EQUIP/SKIP (+ LoV actions)
 
 /entity
   GamePiece.java                  // Common interface for Hero/Monster (position + alive query)
-
-/battle/menu
-  BattleMenu.java                // Interface defining battle-related UI display operations
-  BattleMenuImpl.java            // Implementation of BattleMenu interface
 
 /game
   Game.java                      // Interface defining main game methods
@@ -103,14 +73,33 @@
 /monster
   Dragon.java                    // Subclass of Monster representing a Dragon 
   Exoskeleton.java               // Subclass of Monster representing an Exoskeleton 
+  IMonsterFactory.java           // Port for creating monsters (deterministic in tests)
   Monster.java                   // Abstract base class defining core monster attributes and behavior
   MonsterFactory.java            // Factory class generating monsters for battles
   Spirit.java                    // Subclass of Monster representing a Spirit
 
+/lov/usecase
+  LovActionExecutor.java         // LoV actions use-case layer (no I/O), RNG-injectable for tests
+  LovActionResult.java           // Use-case result object (messages for View)
+  requests/*                     // Typed request objects per action
+  helper/LovRangeUtils.java      // LoV 8-neighborhood range check
+
+/ui
+  /launcher                       // Console launcher (game mode + hero selection)
+  /mh                             // MH view (all MH I/O)
+  /lov                            // LoV view (all LoV I/O)
+  /battle                         // Battle view (all battle I/O)
+  /formatter                      // Map formatters (LegendsMapFormatter, MhMapFormatter)
+
 /upload/base
   GenericFileLoader.java         // Generic loader for building objects from uploaded text files
   LineMapper.java                // Functional mapper converting a text line into an object
-  TextFileUtils.java             // Utility class for reading and parsing text files
+  TextFileReader.java            // Backend I/O port for reading data lines
+  DefaultTextFileReader.java     // Default adapter wiring
+  TextFileUtils.java             // Legacy helper (disabled; use TextFileReader adapter)
+
+/upload/adapter
+  FileSystemTextFileReader.java  // Adapter implementation backed by local filesystem
 
 /upload
   ArmorFileLoader.java           // Loader class for constructing Armor objects from file data
@@ -159,8 +148,10 @@
 * **Use of Key Design Patterns**
 
     * **Factory Pattern**: `MonsterFactory` loads template monsters from files and dynamically generates battle-ready monsters scaled to the party level.
-    * **Strategy Pattern**: `HeroActionStrategy` encapsulates hero actions (attack, spell, potion, equip, skip) into separate strategy objects, making new actions easy to add.
     * **Command Pattern**: `MarketCommand` defines executable market actions (buy, sell, view info, leave) and allows clean, modular menu behavior.
+    * **Ports & Adapters (Dependency Inversion)**:
+      - `TextFileReader` abstracts file reading (backend I/O) so loaders are testable and replaceable.
+      - `IMonsterFactory` abstracts monster creation so battles/LoV can be deterministic in tests.
 
 * **SOLID Principles**
 
@@ -168,12 +159,13 @@
     * New monsters, heroes, items or commands can be added without modifying existing code (Open-Closed Principle).
     * Interfaces decouple components, enabling flexible swapping of implementations (Dependency Inversion Principle).
 
-* **Clear Separation of Concerns**
-
-    * **Model Layer**: Hero, Monster, Item hierarchy, Market, WorldMap, Party.
-    * **Logic Layer**: BattleEngine, HeroActionStrategy, MonsterFactory, MarketService, MarketCommand.
-    * **Infrastructure Layer**: File loaders (`upload.*`), GameConstants, ConsoleColors, IOUtils, centralized MessageUtils.
-      This structure makes the codebase easy to understand, test and extend.
+* **MVC Separation (Project-wide)**
+  All console I/O lives in View implementations (`ui/*`). Model/UseCase layers never print/read directly.
+  - **MH Controller**: `GameImpl`
+  - **LoV Controller**: `LegendsOfValorGameImpl`
+  - **LoV UseCase**: `LovActionExecutor` (+ request/result objects)
+  - **Battle I/O**: `BattleView` + `ConsoleBattleView`
+  - **Map rendering**: formatter classes (`LegendsMapFormatter`, `MhMapFormatter`)
 
 * **Scalable & Extensible Design**
     * A GUI or web interface could be built on top of the existing logic.
@@ -203,11 +195,21 @@ cd /path/to/oop_monsters_and_heroes
 ```
 3. Compile the code:
 ```bash
-javac -d out $(find src -name "*.java")
+rm -rf out
+find src -name "*.java" > sources.txt
+javac -Xlint:all -d out @sources.txt
 ```
 4. Run the game:
 ```bash
 java -cp out Main
+```
+
+## Tests (Pure Java, no JUnit)
+
+Run the automated tests with assertions enabled:
+
+```bash
+java -ea -cp out TestRunner
 ```
 
 
