@@ -91,11 +91,14 @@ public class LegendsOfValorGameImpl {
                 return;
             }
 
+            // Dis.txt: dead heroes respawn at the start of the next round at their specific nexus with full HP/MP.
+            respawnDeadHeroesAtRoundStart();
+
             if (worldMap.isHeroVictory()) {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
-            if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
+            if (worldMap.isMonsterVictory()) {
                 view.showFail("Monsters win!");
                 return;
             }
@@ -109,7 +112,7 @@ public class LegendsOfValorGameImpl {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
-            if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
+            if (worldMap.isMonsterVictory()) {
                 view.showFail("Monsters win!");
                 return;
             }
@@ -123,7 +126,7 @@ public class LegendsOfValorGameImpl {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
                 return;
             }
-            if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) {
+            if (worldMap.isMonsterVictory()) {
                 view.showFail("Monsters win!");
                 return;
             }
@@ -134,6 +137,20 @@ public class LegendsOfValorGameImpl {
             }
 
             round++;
+        }
+    }
+
+    private void respawnDeadHeroesAtRoundStart() {
+        for (Hero hero : party.getHeroes()) {
+            if (hero.isAlive()) {
+                continue;
+            }
+
+            hero.setHp(hero.getMaxHp());
+            hero.setMp(hero.getMaxMp());
+
+            // Put the hero back to their assigned nexus for this game.
+            worldMap.recallHero(hero);
         }
     }
 

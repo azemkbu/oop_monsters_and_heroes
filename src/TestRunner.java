@@ -82,6 +82,8 @@ public class TestRunner {
         total += run(failures, "lov_weapon_swap_changesDamageAndUses", TestRunner::lov_weapon_swap_changesDamageAndUses);
         total += run(failures, "lov_armor_reducesDamage_and_breaks_correctly", TestRunner::lov_armor_reducesDamage_and_breaks_correctly);
         total += run(failures, "lov_potion_strength_increasesAttackDamage", TestRunner::lov_potion_strength_increasesAttackDamage);
+        total += run(failures, "lov_cooccupancy_heroCanMoveOntoMonsterCell", TestRunner::lov_cooccupancy_heroCanMoveOntoMonsterCell);
+        total += run(failures, "lov_respawn_deadHero_nextRound_fullHpMp_and_backToNexus", TestRunner::lov_respawn_deadHero_nextRound_fullHpMp_and_backToNexus);
 
         if (!failures.isEmpty()) {
             System.err.println("FAILED (" + failures.size() + "):");
@@ -177,8 +179,8 @@ public class TestRunner {
         assertEquals(6, mPos[0], "Monster should be at row 6 after moving");
         assertEquals(1, mPos[1], "Monster should remain at col 1");
 
-        // Hero at row 7 col 1 tries to move UP onto monster at row 6 col 1 -> must fail.
-        assertTrue(!map.moveHero(hero, Direction.UP), "Hero must not move onto a monster tile");
+        // Dis.txt: a cell can hold one hero and one monster => moving onto a monster tile is allowed.
+        assertTrue(map.moveHero(hero, Direction.UP), "Hero should be able to move onto a monster cell (co-occupancy)");
     }
 
     private static void lov_teleport_and_recall_basic() {
@@ -855,6 +857,64 @@ public class TestRunner {
         int dmgAfter = hp2 - hp3;
 
         assertTrue(dmgAfter > dmgBase, "Strength potion should increase subsequent attack damage");
+    }
+
+    private static void lov_cooccupancy_heroCanMoveOntoMonsterCell() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        Hero hero = newHero("H");
+        map.placeHeroAtNexus(hero, 0); // row 7 col 0
+        assertTrue(map.moveHero(hero, Direction.RIGHT), "Move hero to col 1");
+
+        Monster monster = new TestMonster("M", 1, false, 10, 10, 10);
+        map.spawnMonster(monster, 0); // row 0 col 1
+        for (int i = 0; i < 6; i++) {
+            assertTrue(map.moveMonsterSouth(monster), "Monster should move south into lane");
+        }
+        int[] mPos = map.getMonsterPosition(monster);
+        assertEquals(6, mPos[0], "Monster should reach row 6");
+        assertEquals(1, mPos[1], "Monster should be at col 1");
+
+        // Hero moves UP onto the monster cell is allowed (co-occupancy).
+        assertTrue(map.moveHero(hero, Direction.UP), "Hero can move onto monster cell (co-occupancy)");
+
+        int[] hPos = map.getHeroPosition(hero);
+        assertEquals(6, hPos[0], "Hero should now share the cell at row 6");
+        assertEquals(1, hPos[1], "Hero should now share the cell at col 1");
+        assertTrue(map.getMonsterAt(6, 1) != null, "Monster should still be present on the shared cell");
+    }
+
+    private static void lov_respawn_deadHero_nextRound_fullHpMp_and_backToNexus() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        Party party = new Party(3);
+        Hero h1 = newHero("H1");
+        party.addHero(h1);
+        map.placeHeroAtNexus(h1, 0);
+
+        // Move away, then kill hero.
+        assertTrue(map.moveHero(h1, Direction.RIGHT), "Move away from spawn");
+        h1.setHp(0);
+        assertTrue(!h1.isAlive(), "Hero should be dead before round starts");
+
+        // Start game for one round, with no hero actions and immediate quit on 2nd prompt.
+        IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(new TestMonster("M1", 1, false, 10, 10, 10)));
+        FakeLovView view = new FakeLovView().withContinueCalls(true, false);
+        view.defaultAction = HeroActionType.SKIP;
+
+        LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(map, party, factory, view, new FixedRandom(0.99, 0));
+        game.start();
+
+        // After round-start respawn, hero should be alive, full HP/MP, and at their nexus.
+        assertTrue(h1.isAlive(), "Hero should respawn at round start");
+        assertEquals(h1.getMaxHp(), h1.getHp(), "Respawn should restore full HP");
+        assertEquals(h1.getMaxMp(), h1.getMp(), "Respawn should restore full MP");
+
+        int[] pos = map.getHeroPosition(h1);
+        assertEquals(LegendsOfValorWorldMap.HERO_NEXUS_ROW, pos[0], "Respawn should return hero to HERO_NEXUS_ROW");
+        assertEquals(LegendsOfValorWorldMap.LANE_COLUMNS[0][0], pos[1], "Respawn should return hero to their lane spawn col");
     }
 
     // ==================== TEST HELPERS ====================

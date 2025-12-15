@@ -240,10 +240,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
             return false;
         }
 
-        // Heroes cannot move onto a monster tile (combat is handled via attack actions)
-        if (getMonsterAt(newRow, newCol) != null) {
-            return false;
-        }
+        // Allow hero + monster co-occupancy (Dis.txt: a cell can hold up to one hero and one monster).
 
         // Check if trying to move behind (north of) a monster
         if (direction == Direction.UP) {
@@ -305,7 +302,8 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         // Find valid teleport destination
         for (int col : targetLaneCols) {
             for (int row = targetRow; row < size; row++) { // Cannot teleport ahead (lower row)
-                if (getHeroAt(row, col) == null && getMonsterAt(row, col) == null) {
+                // Cannot teleport onto another hero (but may teleport onto a monster: hero+monster can share a cell)
+                if (getHeroAt(row, col) == null) {
                     Tile destTile = getTile(row, col);
                     if (destTile.isAccessible() && isAdjacent(targetPos[0], targetPos[1], row, col)) {
                         // Valid teleport destination (update both Map and GamePiece)

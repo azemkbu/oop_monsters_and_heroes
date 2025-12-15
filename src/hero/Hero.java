@@ -22,6 +22,7 @@ public abstract class Hero implements GamePiece {
 
     private int hp;
     private int mp;
+    private int maxMp;
 
     private int strength;
     private int dexterity;
@@ -50,7 +51,8 @@ public abstract class Hero implements GamePiece {
         this.strength = strength;
         this.dexterity = dexterity;
         this.agility = agility;
-        this.mp = mp;
+        this.maxMp = Math.max(0, mp);
+        this.mp = this.maxMp;
         this.hp = computeHpForLevel(level);
         this.experience = experience;
         this.wallet = wallet;
@@ -119,7 +121,9 @@ public abstract class Hero implements GamePiece {
         agility = applyLevelUpToStat(agility, isAgilityFavored());
 
         hp = computeHpForLevel(level);
-        mp = (int) Math.round(mp * HERO_LEVEL_UP_MP_MULTIPLIER);
+        maxMp = (int) Math.round(maxMp * HERO_LEVEL_UP_MP_MULTIPLIER);
+        if (maxMp < 0) maxMp = 0;
+        mp = maxMp;
     }
 
     private int applyLevelUpToStat(int current, boolean favored) {
@@ -141,6 +145,17 @@ public abstract class Hero implements GamePiece {
         }
 
         mp = (int) Math.round(mp * HERO_ROUND_RECOVERY_MULTIPLIER);
+        if (mp > maxMp) {
+            mp = maxMp;
+        }
+    }
+
+    public int getMaxHp() {
+        return level * HERO_HP_PER_LEVEL;
+    }
+
+    public int getMaxMp() {
+        return maxMp;
     }
 
 
@@ -254,7 +269,11 @@ public abstract class Hero implements GamePiece {
     }
 
     public void setMp(int mp) {
-        this.mp = mp;
+        if (mp < 0) {
+            this.mp = 0;
+            return;
+        }
+        this.mp = Math.min(mp, maxMp);
     }
 
     public void setHp(int hp) {
