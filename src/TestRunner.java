@@ -3,6 +3,7 @@ import battle.enums.HeroActionType;
 import battle.engine.BattleEngine;
 import battle.engine.BattleEngineImpl;
 import combat.RangeCalculator;
+import ui.formatter.StatusBarRenderer;
 import game.LegendsOfValorGameImpl;
 import hero.Hero;
 import hero.Paladin;
@@ -106,6 +107,11 @@ public class TestRunner {
         total += run(failures, "range_monsterTypes_haveDifferentBaseRange", TestRunner::range_monsterTypes_haveDifferentBaseRange);
         total += run(failures, "range_weaponRangeBonus_extendsHeroRange", TestRunner::range_weaponRangeBonus_extendsHeroRange);
         total += run(failures, "range_getMonstersInRange_usesDynamicRange", TestRunner::range_getMonstersInRange_usesDynamicRange);
+
+        // UI and Intercept tests
+        total += run(failures, "ui_statusBarRenderer_rendersCorrectly", TestRunner::ui_statusBarRenderer_rendersCorrectly);
+        total += run(failures, "intercept_canMoveNorth_blockedByMonsterInRange", TestRunner::intercept_canMoveNorth_blockedByMonsterInRange);
+        total += run(failures, "monster_getMaxHp_returnsCorrectValue", TestRunner::monster_getMaxHp_returnsCorrectValue);
 
         if (!failures.isEmpty()) {
             System.err.println("FAILED (" + failures.size() + "):");
@@ -1389,6 +1395,66 @@ public class TestRunner {
         warrior.equipWeapon(bow);
         assertEquals(RangeConstants.WARRIOR_RANGE + 2, RangeCalculator.getEffectiveRange(warrior),
             "Bow with +2 range bonus should extend effective range");
+    }
+
+    private static void ui_statusBarRenderer_rendersCorrectly() {
+        // Full bar
+        String full = StatusBarRenderer.renderBar(100, 100, 10);
+        assertTrue(full.contains("\u2588"), "Full bar should contain filled chars");
+        assertTrue(!full.contains("\u2591") || full.indexOf('\u2591') > full.lastIndexOf('\u2588'),
+            "Full bar should not have empty chars before filled");
+        
+        // Empty bar
+        String empty = StatusBarRenderer.renderBar(0, 100, 10);
+        assertTrue(empty.contains("\u2591"), "Empty bar should contain empty chars");
+        
+        // Half bar
+        String half = StatusBarRenderer.renderBar(50, 100, 10);
+        assertTrue(half.contains("\u2588") && half.contains("\u2591"),
+            "Half bar should contain both filled and empty chars");
+        
+        // Edge case: max=0
+        String zeroMax = StatusBarRenderer.renderBar(0, 0, 10);
+        assertTrue(zeroMax.length() > 0, "Zero max should still render something");
+    }
+
+    private static void intercept_canMoveNorth_blockedByMonsterInRange() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        // Create a hero and place at row 4
+        Warrior hero = new Warrior("InterceptHero", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+        map.placeHeroAtNexus(hero, 0);
+        // Move hero up from row 7 to row 4
+        map.moveHero(hero, Direction.UP); // 6
+        map.moveHero(hero, Direction.UP); // 5
+        map.moveHero(hero, Direction.UP); // 4
+
+        // Create a Dragon (range 2) at row 3
+        Dragon dragon = new Dragon("BlockerDragon", 1, 100, 100, 50);
+        map.spawnMonster(dragon, 0);
+        // Move dragon south from row 0 to row 3
+        map.moveMonsterSouth(dragon); // 1
+        map.moveMonsterSouth(dragon); // 2
+        map.moveMonsterSouth(dragon); // 3
+
+        // Hero at row 4, Dragon at row 3 with range 2
+        // Hero CAN move to row 3 (co-occupancy is allowed)
+        boolean canMoveOnto = map.moveHero(hero, Direction.UP);
+        assertTrue(canMoveOnto, "Hero should be able to move onto monster cell (co-occupancy)");
+        
+        // Now hero at row 3, Dragon at row 3
+        // Hero cannot move north to row 2 (blocked by Dragon in attack range)
+        boolean canMovePast = map.moveHero(hero, Direction.UP);
+        assertTrue(!canMovePast, "Hero should be blocked from moving past Dragon in attack range");
+    }
+
+    private static void monster_getMaxHp_returnsCorrectValue() {
+        Dragon dragon = new Dragon("TestDragon", 5, 100, 100, 50);
+        assertEquals(500, dragon.getMaxHp(), "Dragon level 5 should have MaxHp = 5 * 100 = 500");
+
+        Exoskeleton exo = new Exoskeleton("TestExo", 3, 100, 100, 50);
+        assertEquals(300, exo.getMaxHp(), "Exoskeleton level 3 should have MaxHp = 3 * 100 = 300");
     }
 
     private static void range_getMonstersInRange_usesDynamicRange() {

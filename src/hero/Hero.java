@@ -231,6 +231,10 @@ public abstract class Hero implements GamePiece {
         return wallet.getGold();
     }
 
+    public int getExperience() {
+        return experience;
+    }
+
     public void addGold(int amount) {
         wallet.addGold(amount);
     }

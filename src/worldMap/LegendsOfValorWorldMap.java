@@ -259,15 +259,24 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
     /**
      * Checks if hero can move north (towards monster nexus).
-     * Rule: Cannot move past a monster without killing it first.
+     * Rule: Cannot move PAST a monster (to a row north of the monster) if that monster has the hero in attack range.
+     * Hero CAN move onto the monster's cell (co-occupancy is allowed).
+     * Uses dynamic attack range from RangeCalculator.
      */
     private boolean canMoveNorth(Hero hero, int fromRow, int fromCol, int toRow, int toCol) {
-        // Check if there's a monster at the same column that would block movement
-        for (int row = fromRow; row >= toRow; row--) {
-            Monster m = getMonsterAt(row, toCol);
-            if (m != null && row > toRow) {
-                // Monster is blocking the path
-                return false;
+        for (Monster m : getAliveMonsters()) {
+            int[] monsterPos = monsterPositions.get(m);
+            if (monsterPos == null) continue;
+            
+            int monsterRange = RangeCalculator.getEffectiveRange(m);
+            
+            // If hero's current position is within monster's attack range
+            if (RangeCalculator.isWithinRange(fromRow, fromCol, monsterPos[0], monsterPos[1], monsterRange)) {
+                // And hero is trying to move north PAST the monster (not onto it)
+                // toRow < monsterPos[0] means moving to a row north of the monster
+                if (toRow < monsterPos[0]) {
+                    return false;  // Blocked by monster - must kill it first
+                }
             }
         }
         return true;

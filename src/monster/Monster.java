@@ -142,6 +142,10 @@ public abstract class Monster implements GamePiece {
         return hp;
     }
 
+    public int getMaxHp() {
+        return level * HERO_HP_PER_LEVEL;
+    }
+
     public int getDefense() {
         return defense;
     }

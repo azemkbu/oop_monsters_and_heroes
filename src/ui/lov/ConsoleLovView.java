@@ -14,8 +14,10 @@ import market.service.MarketServiceImpl;
 import market.ui.MarketMenu;
 import market.ui.MarketMenuImpl;
 import monster.Monster;
+import ui.formatter.HeroStatusFormatter;
 import ui.formatter.LegendsMapFormatter;
 import ui.formatter.LineKind;
+import ui.formatter.MonsterStatusFormatter;
 import ui.formatter.RenderedLine;
 import utils.IOUtils;
 import utils.MessageUtils;
@@ -85,17 +87,41 @@ public final class ConsoleLovView implements LovView {
 
     @Override
     public void showHeroesAndMonstersStatus(List<Hero> heroes, List<Monster> monsters) {
-        io.printlnTitle(MessageUtils.DEFAULT_LINE_HEADER);
-        io.printlnHeader("======= STATUS =======");
-        io.printlnTitle("Heroes:");
-        for (Hero h : heroes) {
-            io.printlnTitle("  - " + h);
+        io.printlnTitle("═══════════════════════════════════════════════════════════════════");
+        
+        // Heroes section
+        io.printlnHeader("                         ═══════ HEROES ═══════");
+        io.printlnTitle("┌─────────────────────────────────────────────────────────────────┐");
+        for (int i = 0; i < heroes.size(); i++) {
+            Hero h = heroes.get(i);
+            List<String> heroLines = HeroStatusFormatter.render(h, i);
+            for (String line : heroLines) {
+                io.printlnTitle("│ " + line + " │");
+            }
+            if (i < heroes.size() - 1) {
+                io.printlnTitle("├─────────────────────────────────────────────────────────────────┤");
+            }
         }
-        io.printlnTitle("Monsters:");
-        for (Monster m : monsters) {
-            io.printlnTitle("  - " + m);
+        io.printlnTitle("└─────────────────────────────────────────────────────────────────┘");
+        
+        // Monsters section
+        if (!monsters.isEmpty()) {
+            io.printlnHeader("                        ═══════ MONSTERS ═══════");
+            io.printlnTitle("┌─────────────────────────────────────────────────────────────────┐");
+            for (int i = 0; i < monsters.size(); i++) {
+                Monster m = monsters.get(i);
+                List<String> monsterLines = MonsterStatusFormatter.render(m, i);
+                for (String line : monsterLines) {
+                    io.printlnTitle("│ " + line + " │");
+                }
+                if (i < monsters.size() - 1) {
+                    io.printlnTitle("├─────────────────────────────────────────────────────────────────┤");
+                }
+            }
+            io.printlnTitle("└─────────────────────────────────────────────────────────────────┘");
         }
-        io.printlnHeader(MessageUtils.DEFAULT_LINE_HEADER);
+        
+        io.printlnTitle("═══════════════════════════════════════════════════════════════════");
     }
 
     @Override
