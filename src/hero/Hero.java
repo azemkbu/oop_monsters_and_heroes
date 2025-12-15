@@ -22,6 +22,7 @@ public abstract class Hero implements GamePiece {
 
     private int hp;
     private int mp;
+    private int maxMp;  // Store initial MP for respawn
 
     private int strength;
     private int dexterity;
@@ -51,6 +52,7 @@ public abstract class Hero implements GamePiece {
         this.dexterity = dexterity;
         this.agility = agility;
         this.mp = mp;
+        this.maxMp = mp;  // Store initial MP
         this.hp = computeHpForLevel(level);
         this.experience = experience;
         this.wallet = wallet;
@@ -176,13 +178,22 @@ public abstract class Hero implements GamePiece {
 
             armor.consumeUse();
             if (!armor.isUsable()) {
-                return;
+                // Armor broke - unequip it but still apply damage
+                this.equippedArmor = null;
             }
         }
 
+        // Always apply damage
         hp = Math.max(0, hp - effectiveDamage);
     }
 
+    /**
+     * Revives the hero with full HP and MP (used for Nexus respawn in LoV).
+     */
+    public void revive() {
+        hp = computeHpForLevel(level);
+        mp = getMaxMp();
+    }
 
     public void rewardFromBattle(int monsterLevel,
                                  int numberOfMonsters,
@@ -237,6 +248,10 @@ public abstract class Hero implements GamePiece {
 
     public int getMp() {
         return mp;
+    }
+
+    public int getMaxMp() {
+        return maxMp;
     }
 
     public int getStrength() {

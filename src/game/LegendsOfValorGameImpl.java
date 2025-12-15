@@ -23,6 +23,7 @@ import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.Tile;
+import worldMap.enums.Direction;
 
 /**
  * Main game loop for Legends of Valor.
@@ -70,6 +71,9 @@ public class LegendsOfValorGameImpl {
         BattleContext context = new BattleContext(battleMenu);
 
         while (running) {
+            // Respawn dead heroes at their Nexus with full HP/MP (per Dis.txt)
+            respawnDeadHeroes();
+            
             io.printlnHeader("===== Round " + round + " =====");
             worldMap.printMap();
             if (wantsQuitThisRound()) {
@@ -164,6 +168,7 @@ public class LegendsOfValorGameImpl {
                 continue;
             }
 
+            // 1. If hero in range, attack
             List<Hero> targets = worldMap.getHeroesInRange(monster);
             if (!targets.isEmpty()) {
                 Hero target = targets.get((int) (Math.random() * targets.size()));
@@ -171,10 +176,18 @@ public class LegendsOfValorGameImpl {
                 continue;
             }
             
+            // 2. Try to move intelligently (seek heroes)
+            Hero closestHero = worldMap.findClosestHero(monster);
+            if (closestHero != null) {
+                Direction dir = worldMap.findNextStepTowardHero(monster, closestHero);
+                if (dir != null) {
+                    moveMonsterInDirection(monster, dir);
+                    continue;
+                }
+            }
 
+            // 3. Fallback: just move south
             worldMap.moveMonsterSouth(monster);
-            
-
         }
 
         // End-of-round recovery for alive heroes (keeps original feel)
@@ -182,6 +195,23 @@ public class LegendsOfValorGameImpl {
             if (hero.isAlive()) {
                 hero.recoverAfterRound();
             }
+        }
+    }
+    
+    private void moveMonsterInDirection(Monster monster, Direction dir) {
+        switch (dir) {
+            case UP:
+                // Monsters generally don't move north, but allow if seeking
+                break;
+            case DOWN:
+                worldMap.moveMonsterSouth(monster);
+                break;
+            case LEFT:
+                worldMap.moveMonsterWest(monster);
+                break;
+            case RIGHT:
+                worldMap.moveMonsterEast(monster);
+                break;
         }
     }
 
@@ -273,6 +303,23 @@ public class LegendsOfValorGameImpl {
         MarketService marketService = new MarketServiceImpl(market, io);
         MarketMenu marketMenu = new MarketMenuImpl(marketService, io);
         marketMenu.runMarketSession(hero);
+    }
+
+    /**
+     * Respawns dead heroes at their Nexus with full HP/MP (per Dis.txt rules).
+     */
+    private void respawnDeadHeroes() {
+        List<Hero> heroes = party.getHeroes();
+        for (int i = 0; i < heroes.size(); i++) {
+            Hero hero = heroes.get(i);
+            if (!hero.isAlive()) {
+                // Revive with full HP/MP
+                hero.revive();
+                // Place back at Nexus
+                worldMap.placeHeroAtNexus(hero, i);
+                io.printlnWarning(hero.getName() + " has respawned at their Nexus!");
+            }
+        }
     }
 
     private boolean wantsQuitThisRound() {
