@@ -1,5 +1,7 @@
 import battle.enums.EquipChoice;
 import battle.enums.HeroActionType;
+import battle.engine.BattleEngine;
+import battle.engine.BattleEngineImpl;
 import game.LegendsOfValorGameImpl;
 import hero.Hero;
 import hero.Party;
@@ -27,6 +29,7 @@ import market.service.MarketResult;
 import monster.IMonsterFactory;
 import monster.Monster;
 import monster.enums.MonsterAttribute;
+import ui.battle.BattleView;
 import ui.lov.LovView;
 import java.util.Random;
 import worldMap.LegendsOfValorWorldMap;
@@ -84,6 +87,12 @@ public class TestRunner {
         total += run(failures, "lov_potion_strength_increasesAttackDamage", TestRunner::lov_potion_strength_increasesAttackDamage);
         total += run(failures, "lov_cooccupancy_heroCanMoveOntoMonsterCell", TestRunner::lov_cooccupancy_heroCanMoveOntoMonsterCell);
         total += run(failures, "lov_respawn_deadHero_nextRound_fullHpMp_and_backToNexus", TestRunner::lov_respawn_deadHero_nextRound_fullHpMp_and_backToNexus);
+
+        // Battle system (BattleEngineImpl) tests
+        total += run(failures, "battle_heroesWin_attack_rewardsApplied", TestRunner::battle_heroesWin_attack_rewardsApplied);
+        total += run(failures, "battle_monstersWin_postBattleRecovery_revivesHero", TestRunner::battle_monstersWin_postBattleRecovery_revivesHero);
+        total += run(failures, "battle_potion_then_attack_effect_applies", TestRunner::battle_potion_then_attack_effect_applies);
+        total += run(failures, "battle_castSpell_consumesMp_and_appliesDebuff", TestRunner::battle_castSpell_consumesMp_and_appliesDebuff);
 
         if (!failures.isEmpty()) {
             System.err.println("FAILED (" + failures.size() + "):");
@@ -917,10 +926,111 @@ public class TestRunner {
         assertEquals(LegendsOfValorWorldMap.LANE_COLUMNS[0][0], pos[1], "Respawn should return hero to their lane spawn col");
     }
 
+    // ==================== Battle system tests (BattleEngineImpl) ====================
+
+    private static void battle_heroesWin_attack_rewardsApplied() {
+        Party party = new Party(3);
+        Hero hero = newHeroNoDodge("Hero");
+        party.addHero(hero);
+
+        Monster m = new TestMonster("M", 1, false, 10, 0, 0);
+        m.setHp(1); // ensure one hit kills
+        IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(m));
+
+        FakeBattleView view = new FakeBattleView()
+                .withHeroActions(HeroActionType.ATTACK)
+                .withMonsterTargets(m);
+
+        BattleEngine engine = new BattleEngineImpl(view, factory, new FixedRandom(0.99, 0));
+        boolean heroesWon = engine.runBattle(party, null);
+        assertTrue(heroesWon, "Heroes should win when the only monster is killed");
+
+        assertTrue(hero.getGold() >= 100, "Battle rewards should grant gold to surviving hero");
+    }
+
+    private static void battle_monstersWin_postBattleRecovery_revivesHero() {
+        Party party = new Party(3);
+        Hero hero = newHeroNoDodge("Hero");
+        party.addHero(hero);
+
+        // Monster will one-shot hero
+        Monster m = new TestMonster("M", 1, false, 100000, 0, 0);
+        IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(m));
+
+        FakeBattleView view = new FakeBattleView()
+                .withHeroActions(HeroActionType.SKIP);
+
+        BattleEngine engine = new BattleEngineImpl(view, factory, new FixedRandom(0.99, 0));
+        boolean heroesWon = engine.runBattle(party, null);
+        assertTrue(!heroesWon, "Heroes should lose when all heroes are defeated");
+
+        // Post-battle recovery revives defeated heroes to half HP (>=1)
+        assertTrue(hero.isAlive(), "Hero should be revived after losing battle");
+        assertEquals(hero.getMaxHp() / 2, hero.getHp(), "Hero should revive to half max HP after battle");
+    }
+
+    private static void battle_potion_then_attack_effect_applies() {
+        Party party = new Party(3);
+        Hero hero = newHeroNoDodge("Hero");
+        party.addHero(hero);
+
+        // Add strength potion: +50 strength so next attack damage increases
+        Potion p = new Potion("STR", 0, 1, 50, StatType.STRENGTH);
+        hero.getInventory().add(p);
+
+        Monster m = new TestMonster("M", 1, false, 1, 0, 0);
+        m.setHp(5); // damage after potion should be 5 -> kill
+        IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(m));
+
+        FakeBattleView view = new FakeBattleView()
+                .withHeroActions(HeroActionType.USE_POTION, HeroActionType.ATTACK)
+                .withPotionChoices(p)
+                .withMonsterTargets(m);
+
+        BattleEngine engine = new BattleEngineImpl(view, factory, new FixedRandom(0.99, 0));
+        boolean heroesWon = engine.runBattle(party, null);
+        assertTrue(heroesWon, "Heroes should win after using potion then attacking next round");
+        assertTrue(!hero.getInventory().contains(p), "Potion should be consumed and removed from inventory");
+        assertTrue(!m.isAlive(), "Monster should be defeated by the attack after potion");
+    }
+
+    private static void battle_castSpell_consumesMp_and_appliesDebuff() {
+        Party party = new Party(3);
+        Hero hero = newHeroNoDodge("Mage");
+        party.addHero(hero);
+
+        hero.setMp(999);
+        Spell ice = new Spell("ICE", 0, 1, 200, 10, SpellType.ICE);
+        hero.getInventory().add(ice);
+
+        Monster m = new TestMonster("M", 1, false, 100, 0, 0);
+        m.setHp(10); // ensure spell kills
+        double baseDamageBefore = m.getBaseDamage();
+
+        IMonsterFactory factory = new FixedMonsterFactory(Collections.singletonList(m));
+        FakeBattleView view = new FakeBattleView()
+                .withHeroActions(HeroActionType.CAST_SPELL)
+                .withSpellChoices(ice)
+                .withMonsterTargets(m);
+
+        int mpBefore = hero.getMp();
+        BattleEngine engine = new BattleEngineImpl(view, factory, new FixedRandom(0.99, 0));
+        boolean heroesWon = engine.runBattle(party, null);
+        assertTrue(heroesWon, "Heroes should win if spell kills the only monster");
+        assertEquals(mpBefore - ice.getManaCost(), hero.getMp(), "Casting a spell should consume MP");
+        assertTrue(!hero.getInventory().contains(ice), "Spell item should be consumed and removed from inventory");
+        assertTrue(m.getBaseDamage() < baseDamageBefore, "ICE spell should reduce monster base damage");
+    }
+
     // ==================== TEST HELPERS ====================
 
     private static Hero newHero(String name) {
         return new Warrior(name, 1, 50, 50, 50, 50, new Wallet(0), 0);
+    }
+
+    private static Hero newHeroNoDodge(String name) {
+        // agility=0 -> dodge chance 0, avoids randomness in battle tests
+        return new Warrior(name, 1, 50, 50, 0, 50, new Wallet(0), 0);
     }
 
     private static final class FixedMonsterFactory implements IMonsterFactory {
@@ -1057,6 +1167,109 @@ public class TestRunner {
 
         @Override
         public void showWarning(String message) { warningCount++; }
+    }
+
+    private static final class FakeBattleView implements BattleView {
+        private final List<HeroActionType> heroActions = new ArrayList<>();
+        private int heroActionIdx = 0;
+
+        private final List<Monster> monsterTargets = new ArrayList<>();
+        private int monsterTargetIdx = 0;
+
+        private final List<Potion> potionChoices = new ArrayList<>();
+        private int potionIdx = 0;
+
+        private final List<Spell> spellChoices = new ArrayList<>();
+        private int spellIdx = 0;
+
+        private FakeBattleView withHeroActions(HeroActionType... actions) {
+            heroActions.clear();
+            Collections.addAll(heroActions, actions);
+            heroActionIdx = 0;
+            return this;
+        }
+
+        private FakeBattleView withMonsterTargets(Monster... targets) {
+            monsterTargets.clear();
+            Collections.addAll(monsterTargets, targets);
+            monsterTargetIdx = 0;
+            return this;
+        }
+
+        private FakeBattleView withPotionChoices(Potion... potions) {
+            potionChoices.clear();
+            Collections.addAll(potionChoices, potions);
+            potionIdx = 0;
+            return this;
+        }
+
+        private FakeBattleView withSpellChoices(Spell... spells) {
+            spellChoices.clear();
+            Collections.addAll(spellChoices, spells);
+            spellIdx = 0;
+            return this;
+        }
+
+        @Override
+        public void showBattleStatus(List<Hero> heroes, List<Monster> monsters) {}
+
+        @Override
+        public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters) {
+            if (heroActionIdx >= heroActions.size()) {
+                return HeroActionType.SKIP;
+            }
+            return heroActions.get(heroActionIdx++);
+        }
+
+        @Override
+        public Monster promptMonsterTarget(Hero hero, List<Monster> monsters) {
+            if (monsterTargetIdx < monsterTargets.size()) {
+                return monsterTargets.get(monsterTargetIdx++);
+            }
+            if (monsters == null || monsters.isEmpty()) return null;
+            return monsters.get(0);
+        }
+
+        @Override
+        public Spell promptSpellToCast(Hero hero, List<Spell> spells) {
+            if (spellIdx < spellChoices.size()) {
+                return spellChoices.get(spellIdx++);
+            }
+            if (spells == null || spells.isEmpty()) return null;
+            return spells.get(0);
+        }
+
+        @Override
+        public Potion promptPotionToUse(Hero hero, List<Potion> potions) {
+            if (potionIdx < potionChoices.size()) {
+                return potionChoices.get(potionIdx++);
+            }
+            if (potions == null || potions.isEmpty()) return null;
+            return potions.get(0);
+        }
+
+        @Override
+        public EquipChoice promptEquipChoice(Hero hero) {
+            return EquipChoice.CANCEL;
+        }
+
+        @Override
+        public Weapon promptWeaponToEquip(Hero hero, List<Weapon> weapons) { return null; }
+
+        @Override
+        public Armor promptArmorToEquip(Hero hero, List<Armor> armors) { return null; }
+
+        @Override
+        public int promptHandsForWeapon(Hero hero, Weapon weapon) { return 1; }
+
+        @Override
+        public void showSuccess(String msg) {}
+
+        @Override
+        public void showWarning(String msg) {}
+
+        @Override
+        public void showFail(String msg) {}
     }
 
     private static final class TestMonster extends Monster {

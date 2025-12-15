@@ -19,7 +19,7 @@ import worldMap.IWorldMap;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 /**
  * Implementation of {@link BattleEngine} interface
@@ -29,10 +29,16 @@ public class BattleEngineImpl implements BattleEngine {
 
     private final BattleView view;
     private final IMonsterFactory monsterFactory;
+    private final Random rng;
 
     public BattleEngineImpl(BattleView view, IMonsterFactory monsterFactory) {
+        this(view, monsterFactory, new Random());
+    }
+
+    public BattleEngineImpl(BattleView view, IMonsterFactory monsterFactory, Random rng) {
         this.view = view;
         this.monsterFactory = monsterFactory;
+        this.rng = (rng == null) ? new Random() : rng;
     }
 
     @Override
@@ -232,7 +238,7 @@ public class BattleEngineImpl implements BattleEngine {
         int finalDamage = calculateSpellDamage(hero, target, spell);
 
         double dodgeProb = target.getDodgeChance() * GameConstants.MONSTER_DODGE_MULTIPLIER;
-        double roll = ThreadLocalRandom.current().nextDouble();
+        double roll = rng.nextDouble();
         if (roll < dodgeProb) {
             view.showWarning(String.format(MessageUtils.MONSTER_DODGED_SPELL, target.getName()));
             return;
@@ -402,7 +408,7 @@ public class BattleEngineImpl implements BattleEngine {
         if (alive.isEmpty()) {
             return null;
         }
-        int idx = (int) (Math.random() * alive.size());
+        int idx = rng.nextInt(alive.size());
         return alive.get(idx);
     }
 
