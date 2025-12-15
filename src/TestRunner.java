@@ -37,7 +37,6 @@ import worldMap.enums.TileType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import utils.GameConstants;
 
 /**
  * Minimal pure-Java test runner (no JUnit).
@@ -638,6 +637,7 @@ public class TestRunner {
 
         // By round 8 end, a second wave should have spawned (spawn tiles should be free because monsters moved to row 5).
         assertTrue(map.getMonsters().size() >= 6, "After spawn interval, total monsters should increase (at least 2 waves)");
+        assertTrue(view.warningCount > 0, "Spawn interval should display at least one warning message");
     }
 
     private static void lov_controller_heroVictory() {
@@ -914,31 +914,6 @@ public class TestRunner {
         public boolean dodgesAttack() {
             return alwaysDodge;
         }
-    }
-
-    // ==================== Existing model tests kept below ====================
-
-    private static void lov_removeObstacleAction_changesTileType() {
-        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
-        makeLovDeterministicPlain(map);
-
-        Hero hero = newHero("HeroA");
-        map.placeHeroAtNexus(hero, 0); // row 7 col 0
-
-        // Put obstacle at row 6 col 0 (UP from hero)
-        map.getTile(6, 0).setType(TileType.OBSTACLE);
-        map.getTile(6, 0).setFeature(null);
-
-        LovActionExecutor executor = new LovActionExecutor(map, new FixedRandom(0.99, 0));
-        LovActionResult result = executor.execute(
-                HeroActionType.REMOVE_OBSTACLE,
-                hero,
-                map.getAliveMonsters(),
-                new RemoveObstacleRequest(Direction.UP)
-        );
-        assertTrue(result.isSuccess(), "RemoveObstacle usecase should succeed");
-
-        assertEquals(TileType.PLAIN, map.getTile(6, 0).getType(), "RemoveObstacle action should turn OBSTACLE into PLAIN");
     }
 
     // ==================== TEST HELPERS ====================
