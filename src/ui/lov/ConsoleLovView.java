@@ -68,13 +68,9 @@ public final class ConsoleLovView implements LovView {
 
     @Override
     public boolean promptContinueOrQuit() {
-        io.printPrompt("Press ENTER to continue, or Q to quit: ");
-        String line = io.readLine();
-        if (line == null) {
-            return false;
-        }
-        String trimmed = line.trim();
-        return trimmed.isEmpty() || !trimmed.equalsIgnoreCase("q");
+        // Keep the LoV UI identical to the original version: no "press enter to continue" prompt.
+        // The game continues immediately each round; quitting is handled by outer application / EOF.
+        return true;
     }
 
     @Override
@@ -326,16 +322,14 @@ public final class ConsoleLovView implements LovView {
             return false;
         }
 
-        io.printPrompt("Enter market for " + hero.getName() + "? (y/n, q to quit): ");
+        // Match the original LOV prompt format exactly.
+        io.printPrompt("Enter market for " + hero.getName() + "? (y/n): ");
         String line = io.readLine();
-        if (line == null) {
-            return true;
+        if (line == null || line.trim().isEmpty()) {
+            return false;
         }
-        String trimmed = line.trim();
-        if (trimmed.equalsIgnoreCase("q")) {
-            return true;
-        }
-        if (!trimmed.equalsIgnoreCase("y")) {
+        char c = Character.toLowerCase(line.trim().charAt(0));
+        if (c != 'y') {
             return false;
         }
 

@@ -87,7 +87,6 @@ public class LegendsOfValorGameImpl {
             view.showRoundHeader(round);
             view.renderMap();
             if (!view.promptContinueOrQuit()) {
-                view.showSuccess("Quitting Legends of Valor. Goodbye!");
                 return;
             }
 

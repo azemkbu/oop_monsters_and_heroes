@@ -582,7 +582,7 @@ public class TestRunner {
 
         LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(map, party, factory, view, new FixedRandom(0.99, 0));
         game.start();
-        assertTrue(view.successCount > 0, "Quit path should show success message");
+        assertEquals(1, view.roundHeaders, "Quit path should stop immediately after first prompt");
     }
 
     private static void lov_controller_initialSpawn_onePerLane() {
