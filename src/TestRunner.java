@@ -2,11 +2,18 @@ import battle.enums.EquipChoice;
 import battle.enums.HeroActionType;
 import battle.engine.BattleEngine;
 import battle.engine.BattleEngineImpl;
+import combat.RangeCalculator;
 import game.LegendsOfValorGameImpl;
 import hero.Hero;
+import hero.Paladin;
 import hero.Party;
+import hero.Sorcerer;
 import hero.Wallet;
 import hero.Warrior;
+import monster.Dragon;
+import monster.Exoskeleton;
+import monster.Spirit;
+import utils.RangeConstants;
 import lov.usecase.requests.AttackRequest;
 import lov.usecase.LovActionExecutor;
 import lov.usecase.LovActionResult;
@@ -93,6 +100,12 @@ public class TestRunner {
         total += run(failures, "battle_monstersWin_postBattleRecovery_revivesHero", TestRunner::battle_monstersWin_postBattleRecovery_revivesHero);
         total += run(failures, "battle_potion_then_attack_effect_applies", TestRunner::battle_potion_then_attack_effect_applies);
         total += run(failures, "battle_castSpell_consumesMp_and_appliesDebuff", TestRunner::battle_castSpell_consumesMp_and_appliesDebuff);
+
+        // Attack range system tests
+        total += run(failures, "range_heroClasses_haveDifferentBaseRange", TestRunner::range_heroClasses_haveDifferentBaseRange);
+        total += run(failures, "range_monsterTypes_haveDifferentBaseRange", TestRunner::range_monsterTypes_haveDifferentBaseRange);
+        total += run(failures, "range_weaponRangeBonus_extendsHeroRange", TestRunner::range_weaponRangeBonus_extendsHeroRange);
+        total += run(failures, "range_getMonstersInRange_usesDynamicRange", TestRunner::range_getMonstersInRange_usesDynamicRange);
 
         if (!failures.isEmpty()) {
             System.err.println("FAILED (" + failures.size() + "):");
@@ -1319,6 +1332,94 @@ public class TestRunner {
     }
 
     // No IO fakes needed: tests cover Model/UseCase only (MVC).
+
+    // ==================== RANGE SYSTEM TESTS ====================
+
+    private static void range_heroClasses_haveDifferentBaseRange() {
+        // Create heroes of different classes
+        Warrior warrior = new Warrior("TestWarrior", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+        Sorcerer sorcerer = new Sorcerer("TestSorcerer", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+        Paladin paladin = new Paladin("TestPaladin", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+
+        // Verify each class has its expected base range
+        assertEquals(RangeConstants.WARRIOR_RANGE, warrior.getBaseAttackRange(),
+            "Warrior should have WARRIOR_RANGE");
+        assertEquals(RangeConstants.SORCERER_RANGE, sorcerer.getBaseAttackRange(),
+            "Sorcerer should have SORCERER_RANGE");
+        assertEquals(RangeConstants.PALADIN_RANGE, paladin.getBaseAttackRange(),
+            "Paladin should have PALADIN_RANGE");
+
+        // Sorcerer should have longer range than warrior
+        assertTrue(sorcerer.getBaseAttackRange() > warrior.getBaseAttackRange(),
+            "Sorcerer should have longer range than Warrior");
+    }
+
+    private static void range_monsterTypes_haveDifferentBaseRange() {
+        Dragon dragon = new Dragon("TestDragon", 1, 100, 100, 50);
+        Spirit spirit = new Spirit("TestSpirit", 1, 100, 100, 50);
+        Exoskeleton exoskeleton = new Exoskeleton("TestExo", 1, 100, 100, 50);
+
+        assertEquals(RangeConstants.DRAGON_RANGE, dragon.getBaseAttackRange(),
+            "Dragon should have DRAGON_RANGE");
+        assertEquals(RangeConstants.SPIRIT_RANGE, spirit.getBaseAttackRange(),
+            "Spirit should have SPIRIT_RANGE");
+        assertEquals(RangeConstants.EXOSKELETON_RANGE, exoskeleton.getBaseAttackRange(),
+            "Exoskeleton should have EXOSKELETON_RANGE");
+
+        // Dragon and Spirit should have longer range than Exoskeleton
+        assertTrue(dragon.getBaseAttackRange() > exoskeleton.getBaseAttackRange(),
+            "Dragon should have longer range than Exoskeleton");
+    }
+
+    private static void range_weaponRangeBonus_extendsHeroRange() {
+        Warrior warrior = new Warrior("TestWarrior", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+        
+        // Without weapon, range should be base
+        assertEquals(RangeConstants.WARRIOR_RANGE, RangeCalculator.getEffectiveRange(warrior),
+            "Without weapon, effective range should equal base range");
+
+        // Equip sword with no range bonus
+        Weapon sword = new Weapon("Sword", 100, 1, 500, 1, 0, 0);
+        warrior.equipWeapon(sword);
+        assertEquals(RangeConstants.WARRIOR_RANGE, RangeCalculator.getEffectiveRange(warrior),
+            "Sword with 0 range bonus should not change effective range");
+
+        // Equip bow with +2 range bonus
+        Weapon bow = new Weapon("Bow", 100, 1, 300, 2, 0, 2);
+        warrior.equipWeapon(bow);
+        assertEquals(RangeConstants.WARRIOR_RANGE + 2, RangeCalculator.getEffectiveRange(warrior),
+            "Bow with +2 range bonus should extend effective range");
+    }
+
+    private static void range_getMonstersInRange_usesDynamicRange() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        // Create a sorcerer (range 2) and a warrior (range 1)
+        Sorcerer sorcerer = new Sorcerer("RangeSorcerer", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+        Warrior warrior = new Warrior("RangeWarrior", 1, 100, 100, 100, 100, new Wallet(1000), 0);
+
+        // Place heroes in lane 0 and lane 1
+        map.placeHeroAtNexus(sorcerer, 0);  // Row 7, Lane 0
+        map.placeHeroAtNexus(warrior, 1);   // Row 7, Lane 1
+        
+        // Move sorcerer up several times to row 3
+        map.moveHero(sorcerer, Direction.UP); // Row 6
+        map.moveHero(sorcerer, Direction.UP); // Row 5
+        map.moveHero(sorcerer, Direction.UP); // Row 4
+        map.moveHero(sorcerer, Direction.UP); // Row 3
+        
+        // Create monster at row 0 (monster nexus)
+        Dragon dragon = new Dragon("RangeDragon", 1, 100, 100, 50);
+        map.spawnMonster(dragon, 0);  // Spawns at row 0
+
+        // Sorcerer at row 3, monster at row 0 -> distance = 3
+        // Sorcerer base range = 2 -> should NOT be in range
+        List<Monster> inRangeForSorcerer = map.getMonstersInRange(sorcerer);
+        // Distance is 3, sorcerer range is 2, so should be empty
+        assertTrue(inRangeForSorcerer.isEmpty() || !inRangeForSorcerer.contains(dragon),
+            "Sorcerer at distance 3 should not reach monster with range 2");
+    }
 
     /**
      * Deterministic Random for tests.

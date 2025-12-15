@@ -2,6 +2,7 @@ package hero;
 
 import hero.enums.HeroSkill;
 import hero.enums.HeroType;
+import utils.RangeConstants;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -28,5 +29,10 @@ public class Warrior extends Hero {
     @Override
     public String getHeroClassName() {
         return HeroType.WARRIOR.name();
+    }
+
+    @Override
+    public int getBaseAttackRange() {
+        return RangeConstants.WARRIOR_RANGE;
     }
 }

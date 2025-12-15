@@ -1,6 +1,7 @@
 package monster;
 
 import monster.enums.MonsterAttribute;
+import utils.RangeConstants;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,5 +24,10 @@ public class Exoskeleton extends Monster {
         Set<MonsterAttribute> attributes = new HashSet<>();
         attributes.add(MonsterAttribute.DEFENSE);
         return attributes;
+    }
+
+    @Override
+    public int getBaseAttackRange() {
+        return RangeConstants.EXOSKELETON_RANGE;
     }
 }

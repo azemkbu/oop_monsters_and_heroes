@@ -1,5 +1,6 @@
 package worldMap;
 
+import combat.RangeCalculator;
 import entity.GamePiece;
 import hero.Hero;
 import hero.Party;
@@ -673,9 +674,12 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         int[] heroPos = heroPositions.get(hero);
         if (heroPos == null) return inRange;
 
+        int range = RangeCalculator.getEffectiveRange(hero);
+
         for (Monster m : getAliveMonsters()) {
             int[] monsterPos = monsterPositions.get(m);
-            if (monsterPos != null && isAdjacent(heroPos[0], heroPos[1], monsterPos[0], monsterPos[1])) {
+            if (monsterPos != null && 
+                RangeCalculator.isWithinRange(heroPos[0], heroPos[1], monsterPos[0], monsterPos[1], range)) {
                 inRange.add(m);
             }
         }
@@ -692,10 +696,13 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         int[] monsterPos = monsterPositions.get(monster);
         if (monsterPos == null) return inRange;
 
+        int range = RangeCalculator.getEffectiveRange(monster);
+
         for (Hero h : heroes) {
             if (h.isAlive()) {
                 int[] heroPos = heroPositions.get(h);
-                if (heroPos != null && isAdjacent(monsterPos[0], monsterPos[1], heroPos[0], heroPos[1])) {
+                if (heroPos != null && 
+                    RangeCalculator.isWithinRange(monsterPos[0], monsterPos[1], heroPos[0], heroPos[1], range)) {
                     inRange.add(h);
                 }
             }

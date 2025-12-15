@@ -52,5 +52,14 @@ public interface GamePiece {
     default boolean isMonster() {
         return false;
     }
+
+    /**
+     * Gets the base attack range of this piece.
+     * Default is 1 (melee range). Subclasses can override for different ranges.
+     * @return the base attack range in tiles
+     */
+    default int getBaseAttackRange() {
+        return 1;
+    }
 }
 
