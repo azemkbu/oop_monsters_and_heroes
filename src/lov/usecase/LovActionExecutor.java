@@ -19,7 +19,7 @@ import worldMap.enums.Direction;
 import lov.usecase.requests.*;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 /**
  * UseCase layer executor for Legends of Valor actions.
@@ -27,9 +27,15 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class LovActionExecutor {
     private final ILegendsWorldMap worldMap;
+    private final Random rng;
 
     public LovActionExecutor(ILegendsWorldMap worldMap) {
+        this(worldMap, new Random());
+    }
+
+    public LovActionExecutor(ILegendsWorldMap worldMap, Random rng) {
         this.worldMap = worldMap;
+        this.rng = (rng == null) ? new Random() : rng;
     }
 
     public LovActionResult execute(HeroActionType type, Hero hero, List<Monster> monsters, LovActionRequest request) {
@@ -246,7 +252,7 @@ public final class LovActionExecutor {
 
         // Dodge check
         double dodgeProb = target.getDodgeChance() * GameConstants.MONSTER_DODGE_MULTIPLIER;
-        double roll = ThreadLocalRandom.current().nextDouble();
+        double roll = rng.nextDouble();
         if (roll < dodgeProb) {
             res.addWarning(String.format(MessageUtils.MONSTER_DODGED_SPELL, target.getName()));
             return res.success(true).build();

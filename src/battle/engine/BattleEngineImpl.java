@@ -11,7 +11,7 @@ import market.model.item.Potion;
 import market.model.item.Spell;
 import market.model.item.Weapon;
 import monster.Monster;
-import monster.MonsterFactory;
+import monster.IMonsterFactory;
 import ui.battle.BattleView;
 import utils.MessageUtils;
 import utils.GameConstants;
@@ -28,9 +28,9 @@ import java.util.concurrent.ThreadLocalRandom;
 public class BattleEngineImpl implements BattleEngine {
 
     private final BattleView view;
-    private final MonsterFactory monsterFactory;
+    private final IMonsterFactory monsterFactory;
 
-    public BattleEngineImpl(BattleView view, MonsterFactory monsterFactory) {
+    public BattleEngineImpl(BattleView view, IMonsterFactory monsterFactory) {
         this.view = view;
         this.monsterFactory = monsterFactory;
     }

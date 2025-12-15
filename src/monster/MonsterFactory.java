@@ -10,7 +10,7 @@ import java.util.Random;
 /**
  * Factory responsible for creating list of {@link Monster} for a battle
  */
-public class MonsterFactory {
+public class MonsterFactory implements IMonsterFactory {
 
     private final Random random = new Random();
     private final List<Monster> monsterPool;
@@ -22,6 +22,7 @@ public class MonsterFactory {
         }
     }
 
+    @Override
     public List<Monster> createMonstersForParty(Party party) {
         int count = party.getMonsterCountForBattle();
         int monsterLevel = party.getHighestLevel();

@@ -4,6 +4,7 @@ import hero.*;
 import java.util.List;
 import java.util.Scanner;
 import market.service.MarketFactory;
+import monster.IMonsterFactory;
 import monster.MonsterFactory;
 import ui.lov.ConsoleLovView;
 import ui.launcher.ConsoleLauncherView;
@@ -45,7 +46,7 @@ public class GameLauncher {
             MarketFactory marketFactory = new MarketFactory();
             MonstersAndHeroesWorldMap worldMap = new MonstersAndHeroesWorldMap(GameConstants.WORLD_MAP_SIZE, marketFactory);
 
-            MonsterFactory monsterFactory = new MonsterFactory();
+            IMonsterFactory monsterFactory = new MonsterFactory();
             ConsoleBattleView battleView = new ConsoleBattleView(ioUtils);
             battle.engine.BattleEngine battleEngine = new battle.engine.BattleEngineImpl(battleView, monsterFactory);
 
@@ -69,7 +70,7 @@ public class GameLauncher {
         }
 
         ConsoleLovView view = new ConsoleLovView(ioUtils, worldMap);
-        MonsterFactory monsterFactory = new MonsterFactory();
+        IMonsterFactory monsterFactory = new MonsterFactory();
         LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(worldMap, party, monsterFactory, view);
         game.start();
     }

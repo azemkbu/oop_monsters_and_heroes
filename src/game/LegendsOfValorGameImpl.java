@@ -24,13 +24,14 @@ import market.model.item.Potion;
 import market.model.item.Spell;
 import market.model.item.Weapon;
 import monster.Monster;
-import monster.MonsterFactory;
+import monster.IMonsterFactory;
 import ui.lov.LovView;
 import utils.GameConstants;
 import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.Tile;
 import worldMap.enums.Direction;
+import java.util.Random;
 
 /**
  * Main game loop for Legends of Valor.
@@ -48,22 +49,32 @@ public class LegendsOfValorGameImpl {
 
     private final LegendsOfValorWorldMap worldMap;
     private final Party party;
-    private final MonsterFactory monsterFactory;
+    private final IMonsterFactory monsterFactory;
     private final LovView view;
     private final LovActionExecutor actionExecutor;
+    private final Random rng;
 
     private int round = 1;
     private boolean running = true;
 
     public LegendsOfValorGameImpl(LegendsOfValorWorldMap worldMap,
                                   Party party,
-                                  MonsterFactory monsterFactory,
+                                  IMonsterFactory monsterFactory,
                                   LovView view) {
+        this(worldMap, party, monsterFactory, view, new Random());
+    }
+
+    public LegendsOfValorGameImpl(LegendsOfValorWorldMap worldMap,
+                                  Party party,
+                                  IMonsterFactory monsterFactory,
+                                  LovView view,
+                                  Random rng) {
         this.worldMap = worldMap;
         this.party = party;
         this.monsterFactory = monsterFactory;
         this.view = view;
-        this.actionExecutor = new LovActionExecutor(worldMap);
+        this.rng = (rng == null) ? new Random() : rng;
+        this.actionExecutor = new LovActionExecutor(worldMap, this.rng);
     }
 
     public void start() {
@@ -90,6 +101,9 @@ public class LegendsOfValorGameImpl {
             }
 
             runHeroesTurn();
+            if (!running) {
+                return;
+            }
 
             if (worldMap.isHeroVictory()) {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -101,6 +115,9 @@ public class LegendsOfValorGameImpl {
             }
 
             runMonstersTurn();
+            if (!running) {
+                return;
+            }
 
             if (worldMap.isHeroVictory()) {
                 view.showSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -180,7 +197,7 @@ public class LegendsOfValorGameImpl {
 
             List<Hero> targets = worldMap.getHeroesInRange(monster);
             if (!targets.isEmpty()) {
-                Hero target = targets.get((int) (Math.random() * targets.size()));
+                Hero target = targets.get(rng.nextInt(targets.size()));
                 monsterAttack(monster, target);
                 continue;
             }
@@ -230,7 +247,7 @@ public class LegendsOfValorGameImpl {
             chance = GameConstants.MAX_DODGE_CHANCE;
         }
 
-        return Math.random() < chance;
+        return rng.nextDouble() < chance;
     }
 
     private void cleanupDeadMonstersAndReward(Hero hero) {
