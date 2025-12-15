@@ -42,11 +42,12 @@ public interface LovView {
      * Returns the action type and direction (for movement) in one step.
      * 
      * @param hero The current hero
+     * @param heroIndex The hero's index (0-based, for display as H1/H2/H3)
      * @param monsters Alive monsters on the map
      * @param isOnNexus Whether the hero is currently on a Nexus (enables Market option)
      * @return The chosen action type, or null if user wants to quit
      */
-    HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus);
+    HeroActionType promptHeroAction(Hero hero, int heroIndex, List<Monster> monsters, boolean isOnNexus);
 
     /**
      * Gets the direction from the last WASD input (used after promptHeroAction returns MOVE).

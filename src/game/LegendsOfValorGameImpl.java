@@ -157,7 +157,8 @@ public class LegendsOfValorGameImpl {
     private void runHeroesTurn() {
         List<Hero> heroes = party.getHeroes();
 
-        for (Hero hero : heroes) {
+        for (int i = 0; i < heroes.size(); i++) {
+            Hero hero = heroes.get(i);
             if (!hero.isAlive()) {
                 continue;
             }
@@ -172,7 +173,7 @@ public class LegendsOfValorGameImpl {
             boolean isOnNexus = (currentTile != null && currentTile.getMarket() != null);
 
             // Prompt for action using letter commands (WASD for move, K for attack, M for market, etc.)
-            HeroActionType actionType = view.promptHeroAction(hero, aliveMonsters, isOnNexus);
+            HeroActionType actionType = view.promptHeroAction(hero, i, aliveMonsters, isOnNexus);
 
             // Handle quit (user pressed Q)
             if (actionType == null) {
@@ -210,22 +211,20 @@ public class LegendsOfValorGameImpl {
             return;
         }
 
-        boolean hasMessages = false;
+        boolean hasFailed = false;
         for (String msg : result.getFailMessages()) {
             view.showFail(msg);
-            hasMessages = true;
+            hasFailed = true;
         }
         for (String msg : result.getWarningMessages()) {
             view.showWarning(msg);
-            hasMessages = true;
         }
         for (String msg : result.getSuccessMessages()) {
             view.showSuccess(msg);
-            hasMessages = true;
         }
 
-        // If there were any messages (especially failures), pause so user can read them
-        if (hasMessages) {
+        // Only pause on failure so user can see what went wrong
+        if (hasFailed) {
             view.waitForUserAcknowledge();
         }
     }

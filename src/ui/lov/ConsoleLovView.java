@@ -99,9 +99,9 @@ public final class ConsoleLovView implements LovView {
     }
 
     @Override
-    public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus) {
-        // Show hero turn header
-        io.printlnSuccess(String.format("═══════ %s's Turn ═══════", hero.getName()));
+    public HeroActionType promptHeroAction(Hero hero, int heroIndex, List<Monster> monsters, boolean isOnNexus) {
+        // Show hero turn header with H1/H2/H3 designation
+        io.printlnSuccess(String.format("═══════ [H%d] %s's Turn ═══════", heroIndex + 1, hero.getName()));
 
         // Show command options
         io.printlnTitle(" Movement: [W]Up  [S]Down  [A]Left  [D]Right");

@@ -1115,7 +1115,7 @@ public class TestRunner {
         public void showHeroesAndMonstersStatus(List<Hero> heroes, List<Monster> monsters) {}
 
         @Override
-        public HeroActionType promptHeroAction(Hero hero, List<Monster> monsters, boolean isOnNexus) {
+        public HeroActionType promptHeroAction(Hero hero, int heroIndex, List<Monster> monsters, boolean isOnNexus) {
             return defaultAction;
         }
 
