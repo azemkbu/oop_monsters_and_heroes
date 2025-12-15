@@ -662,7 +662,6 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         return getTile(party.getRow(), party.getCol());
     }
 
-    @Override
     public void printMap(Party party) {
         throw new UnsupportedOperationException("LOV map does not print directly. Use LovView + LegendsMapFormatter.");
     }
@@ -674,7 +673,6 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         throw new UnsupportedOperationException("LOV map does not print directly. Use LovView + LegendsMapFormatter.");
     }
 
-    @Override
     public IOUtils getIoUtils() {
         throw new UnsupportedOperationException("LOV map does not expose IO. Use LovView for all I/O.");
     }

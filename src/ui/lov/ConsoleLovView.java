@@ -339,7 +339,7 @@ public final class ConsoleLovView implements LovView {
             return false;
         }
 
-        MarketService marketService = new MarketServiceImpl(market, io);
+        MarketService marketService = new MarketServiceImpl(market);
         MarketMenu marketMenu = new MarketMenuImpl(marketService, io);
         marketMenu.runMarketSession(hero);
         return false;

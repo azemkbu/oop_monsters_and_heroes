@@ -1,7 +1,6 @@
 package worldMap;
 
 import market.service.MarketFactory;
-import utils.IOUtils;
 
 /**
  * Backward-compatible WorldMap class that extends MonstersAndHeroesWorldMap.
@@ -17,9 +16,8 @@ public class WorldMap extends MonstersAndHeroesWorldMap {
      * Creates a new WorldMap (delegates to MonstersAndHeroesWorldMap)
      * @param size the size of the map
      * @param marketFactory the factory for creating markets
-     * @param ioUtils the I/O utilities
      */
-    public WorldMap(int size, MarketFactory marketFactory, IOUtils ioUtils) {
-        super(size, marketFactory, ioUtils);
+    public WorldMap(int size, MarketFactory marketFactory) {
+        super(size, marketFactory);
     }
 }

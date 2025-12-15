@@ -1,6 +1,5 @@
 package game;
 
-import utils.IOUtils;
 import worldMap.enums.Direction;
 
 
@@ -22,6 +21,11 @@ public interface Game {
     void stop();
 
     /**
+     * Handles quitting the game (View should own the I/O).
+     */
+    void handleQuit();
+
+    /**
      * Handles moving the party in the given direction on the world map
      *
      * @param direction direction in which the party should attempt to move
@@ -37,6 +41,4 @@ public interface Game {
      * Shows information about all heroes in the current party
      */
     void showPartyInfo();
-
-    IOUtils getIo();
 }

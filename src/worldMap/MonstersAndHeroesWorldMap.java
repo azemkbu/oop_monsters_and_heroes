@@ -3,7 +3,6 @@ package worldMap;
 import hero.Party;
 import market.model.Market;
 import market.service.MarketFactory;
-import utils.IOUtils;
 import utils.GameConstants;
 import worldMap.enums.Direction;
 import worldMap.enums.TileType;
@@ -13,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import static utils.ConsoleColors.*;
 
 /**
  * Implementation of {@link IWorldMap} for the original Monsters and Heroes game.
@@ -26,13 +23,11 @@ public class MonstersAndHeroesWorldMap implements IWorldMap {
     private final Tile[][] grid;
     private final Random random = new SecureRandom();
     private final MarketFactory marketFactory;
-    private final IOUtils ioUtils;
 
-    public MonstersAndHeroesWorldMap(int size, MarketFactory marketFactory, IOUtils ioUtils) {
+    public MonstersAndHeroesWorldMap(int size, MarketFactory marketFactory) {
         this.size = size;
         this.grid = new Tile[size][size];
         this.marketFactory = marketFactory;
-        this.ioUtils = ioUtils;
         generateRandomLayout();
     }
 
@@ -78,51 +73,6 @@ public class MonstersAndHeroesWorldMap implements IWorldMap {
     @Override
     public Tile getPartyTile(Party party) {
         return getTile(party.getRow(), party.getCol());
-    }
-
-    @Override
-    public void printMap(Party party) {
-        ioUtils.printlnHeader(GREEN + "=======WORLD MAP======");
-        for (int row = 0; row < size; row++) {
-            StringBuilder line = new StringBuilder();
-            for (int col = 0; col < size; col++) {
-
-                boolean isParty = (row == party.getRow() && col == party.getCol());
-                Tile tile = grid[row][col];
-
-                if (isParty) {
-                    line.append(BG_CYAN).append(BOLD).append(BLACK).append(" P ").append(RESET);
-                } else {
-                    switch (tile.getType()) {
-                        case INACCESSIBLE:
-                            line.append(BG_RED).append("   ").append(RESET);
-                            break;
-                        case MARKET:
-                            line.append(BG_GREEN).append("   ").append(RESET);
-                            break;
-                        case COMMON:
-                        default:
-                            line.append(BG_YELLOW).append("   ").append(RESET);
-                            break;
-                    }
-                }
-            }
-            ioUtils.printlnTitle(String.valueOf(line));
-        }
-        printMapLegend();
-    }
-
-    @Override
-    public IOUtils getIoUtils() {
-        return ioUtils;
-    }
-
-    private void printMapLegend() {
-        ioUtils.printlnHeader("Legend:");
-        ioUtils.printlnTitle("  " + BG_CYAN   + "   " + RESET + "  = Party position");
-        ioUtils.printlnTitle("  " + BG_GREEN  + "   " + RESET + "  = Market tile");
-        ioUtils.printlnTitle("  " + BG_RED    + "   " + RESET + "  = Inaccessible tile");
-        ioUtils.printlnTitle("  " + BG_YELLOW + "   " + RESET + "  = Common tile (possible battles)");
     }
 
     private void generateRandomLayout() {

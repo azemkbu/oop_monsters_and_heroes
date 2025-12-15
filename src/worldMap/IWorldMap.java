@@ -1,7 +1,6 @@
 package worldMap;
 
 import hero.Party;
-import utils.IOUtils;
 import worldMap.enums.Direction;
 
 /**
@@ -54,17 +53,5 @@ public interface IWorldMap {
      * @return the current Tile
      */
     Tile getPartyTile(Party party);
-
-    /**
-     * Prints the map to the console
-     * @param party the party (to show position)
-     */
-    void printMap(Party party);
-
-    /**
-     * Gets the IOUtils instance for this map
-     * @return the IOUtils instance
-     */
-    IOUtils getIoUtils();
 }
 

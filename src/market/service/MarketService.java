@@ -2,6 +2,7 @@ package market.service;
 
 import hero.Hero;
 import market.model.item.Item;
+import market.service.MarketResult;
 
 import java.util.List;
 
@@ -20,16 +21,16 @@ public interface MarketService {
      *
      * @param hero hero who wants to buy the item
      * @param item item to buy
-     * @return {@code true} if the purchase was successful, {@code false} otherwise
+     * @return result object describing success/failure (no printing in service)
      */
-    boolean buyItem(Hero hero, Item item);
+    MarketResult buyItem(Hero hero, Item item);
 
     /**
      * Sell the given item from the hero's inventory to the market
      *
      * @param hero hero who wants to sell the item
      * @param item item to sell
-     * @return {@code true} if the sale was successful, {@code false} otherwise
+     * @return result object describing success/failure (no printing in service)
      */
-    boolean sellItem(Hero hero, Item item);
+    MarketResult sellItem(Hero hero, Item item);
 }

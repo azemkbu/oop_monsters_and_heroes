@@ -2,7 +2,7 @@ package lov.usecase;
 
 import battle.enums.EquipChoice;
 import battle.enums.HeroActionType;
-import battle.heroAction.helper.LoVRangeUtils;
+import lov.usecase.helper.LovRangeUtils;
 import hero.Hero;
 import market.model.item.Item;
 import market.model.item.ItemType;
@@ -158,7 +158,7 @@ public final class LovActionExecutor {
         if (!monster.isAlive()) {
             return LovActionResult.builder().success(false).addWarning(MessageUtils.NO_MONSTER_SELECTED).build();
         }
-        if (!LoVRangeUtils.isWithinRangeToAttack(hero, monster)) {
+        if (!LovRangeUtils.isWithinRangeToAttack(hero, monster)) {
             return LovActionResult.builder().success(false).addWarning(MessageUtils.NO_ENEMIES_IN_RANGE).build();
         }
 
@@ -234,7 +234,7 @@ public final class LovActionExecutor {
         if (!target.isAlive()) {
             return res.success(false).addWarning(MessageUtils.NO_MONSTER_SELECTED).build();
         }
-        if (!LoVRangeUtils.isWithinRangeToAttack(hero, target)) {
+        if (!LovRangeUtils.isWithinRangeToAttack(hero, target)) {
             return res.success(false).addWarning(MessageUtils.NO_ENEMIES_IN_RANGE).build();
         }
 

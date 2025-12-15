@@ -1,22 +1,19 @@
 package game;
 
-import battle.engine.BattleEngine;
-import battle.engine.BattleEngineImpl;
-import battle.menu.BattleMenu;
-import battle.menu.BattleMenuImpl;
 import hero.*;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 import market.service.MarketFactory;
 import monster.MonsterFactory;
 import ui.lov.ConsoleLovView;
+import ui.launcher.ConsoleLauncherView;
+import ui.launcher.LauncherView;
 import upload.HeroFileLoader;
+import ui.battle.ConsoleBattleView;
+import ui.mh.ConsoleMhView;
 import utils.ConsoleIOUtils;
 import utils.GameConstants;
 import utils.IOUtils;
-import utils.MessageUtils;
 import worldMap.LegendsOfValorWorldMap;
 import worldMap.MonstersAndHeroesWorldMap;
 
@@ -36,32 +33,30 @@ public class GameLauncher {
 
         List<Hero> availableHeroes = HeroFileLoader.loadAllHeroes();
 
-        ioUtils.printlnHeader("Choose game mode:");
-        ioUtils.printlnTitle("  1) Monsters and Heroes");
-        ioUtils.printlnTitle("  2) Legends of Valor");
-        ioUtils.printPrompt("Enter choice (1-2): ");
-        int mode = ioUtils.readIntInRange(1, 2);
+        LauncherView launcherView = new ConsoleLauncherView(ioUtils);
+        int mode = launcherView.promptGameMode();
 
         if (mode == 1) {
-            Party party = chooseParty(availableHeroes, ioUtils,
+            Party party = launcherView.promptPartySelection(availableHeroes,
                     GameConstants.PARTY_DEFAULT_MIN_SIZE,
                     GameConstants.PARTY_DEFAULT_MAX_SIZE);
             party.setPosition(GameConstants.PARTY_INITIAL_ROW_POSITION, GameConstants.PARTY_INITIAL_COL_POSITION);
 
             MarketFactory marketFactory = new MarketFactory();
-            MonstersAndHeroesWorldMap worldMap = new MonstersAndHeroesWorldMap(GameConstants.WORLD_MAP_SIZE, marketFactory, ioUtils);
+            MonstersAndHeroesWorldMap worldMap = new MonstersAndHeroesWorldMap(GameConstants.WORLD_MAP_SIZE, marketFactory);
 
-            BattleMenu battleMenu = new BattleMenuImpl(ioUtils);
             MonsterFactory monsterFactory = new MonsterFactory();
-            BattleEngine battleEngine = new BattleEngineImpl(battleMenu, ioUtils, monsterFactory);
+            ConsoleBattleView battleView = new ConsoleBattleView(ioUtils);
+            battle.engine.BattleEngine battleEngine = new battle.engine.BattleEngineImpl(battleView, monsterFactory);
 
-            Game game = new GameImpl(worldMap, party, battleEngine, ioUtils);
+            ConsoleMhView view = new ConsoleMhView(ioUtils);
+            Game game = new GameImpl(worldMap, party, battleEngine, view);
             game.start();
             return;
         }
 
         // Legends of Valor mode
-        Party party = chooseParty(availableHeroes, ioUtils,
+        Party party = launcherView.promptPartySelection(availableHeroes,
                 GameConstants.LOV_HEROES_PER_TEAM,
                 GameConstants.LOV_HEROES_PER_TEAM);
 
@@ -73,53 +68,9 @@ public class GameLauncher {
             worldMap.placeHeroAtNexus(party.getHeroes().get(lane), lane);
         }
 
-        MonsterFactory monsterFactory = new MonsterFactory();
-
         ConsoleLovView view = new ConsoleLovView(ioUtils, worldMap);
+        MonsterFactory monsterFactory = new MonsterFactory();
         LegendsOfValorGameImpl game = new LegendsOfValorGameImpl(worldMap, party, monsterFactory, view);
         game.start();
-    }
-
-    private Party chooseParty(List<Hero> availableHeroes,
-                              IOUtils ioUtils,
-                              int minSize,
-                              int maxSize) {
-
-        ioUtils.printlnTitle(MessageUtils.LIST_OF_HEROES_HEADER);
-
-        for (int i = 0; i < availableHeroes.size(); i++) {
-            Hero hero = availableHeroes.get(i);
-            ioUtils.printlnTitle(String.format(" [%d] %s%n", i + 1, hero.toString()));
-        }
-
-        if (minSize == maxSize) {
-            ioUtils.printlnTitle("Party size for this mode is fixed at " + minSize + ".");
-        } else {
-            ioUtils.printPrompt(String.format(MessageUtils.CHOOSE_YOUR_PARTY_MESSAGE, minSize, maxSize));
-        }
-
-        int partySize = (minSize == maxSize)
-                ? minSize
-                : ioUtils.readIntInRange(minSize, maxSize);
-
-        Party party = new Party();
-        Set<Hero> chosen = new HashSet<>();
-
-        for (int i = 0; i < partySize; i++) {
-            while (true) {
-                ioUtils.printPrompt(String.format(MessageUtils.SELECT_HERO_BY_NUMBER, i + 1));
-                int choice = ioUtils.readIntInRange(1, availableHeroes.size());
-                Hero hero = availableHeroes.get(choice - 1);
-                if (chosen.contains(hero)) {
-                    ioUtils.printlnFail("You already selected that hero. Choose a different one.");
-                    continue;
-                }
-                chosen.add(hero);
-                party.addHero(hero);
-                break;
-            }
-        }
-
-        return party;
     }
 }

@@ -6,6 +6,7 @@ import market.command.MarketCommand;
 import market.command.MarketCommandConfig;
 import market.model.item.Item;
 import market.service.MarketService;
+import market.service.MarketResult;
 import utils.MessageUtils;
 import utils.GameConstants;
 import utils.IOUtils;
@@ -78,10 +79,8 @@ public class MarketMenuImpl implements MarketMenu {
         }
 
         Item selected = items.get(index);
-        boolean success = marketService.buyItem(hero, selected);
-        if (!success) {
-            ioUtils.printlnFail(MessageUtils.FAILED);
-        }
+        MarketResult result = marketService.buyItem(hero, selected);
+        printResult(result);
     }
 
     @Override
@@ -101,9 +100,26 @@ public class MarketMenuImpl implements MarketMenu {
         }
 
         Item selected = inventory.get(index);
-        boolean success = marketService.sellItem(hero, selected);
-        if (!success) {
+        MarketResult result = marketService.sellItem(hero, selected);
+        printResult(result);
+    }
+
+    private void printResult(MarketResult result) {
+        if (result == null) {
             ioUtils.printlnFail(MessageUtils.FAILED);
+            return;
+        }
+        switch (result.getSeverity()) {
+            case SUCCESS:
+                ioUtils.printlnSuccess(result.getMessage());
+                break;
+            case WARNING:
+                ioUtils.printlnWarning(result.getMessage());
+                break;
+            case FAIL:
+            default:
+                ioUtils.printlnFail(result.getMessage());
+                break;
         }
     }
 

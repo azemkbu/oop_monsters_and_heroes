@@ -3,7 +3,6 @@ package market.service;
 import hero.Hero;
 import market.model.Market;
 import market.model.item.Item;
-import utils.IOUtils;
 import utils.MessageUtils;
 
 import java.util.List;
@@ -17,11 +16,9 @@ import static utils.GameConstants.SELL_PRICE_MULTIPLIER;
 public class MarketServiceImpl implements MarketService {
 
     private final Market market;
-    private final IOUtils ioUtils;
 
-    public MarketServiceImpl(Market market, IOUtils ioUtils) {
+    public MarketServiceImpl(Market market) {
         this.market = market;
-        this.ioUtils = ioUtils;
     }
 
     @Override
@@ -30,35 +27,30 @@ public class MarketServiceImpl implements MarketService {
     }
 
     @Override
-    public boolean buyItem(Hero hero, Item item) {
+    public MarketResult buyItem(Hero hero, Item item) {
         if (!market.getItems().contains(item)) {
-            ioUtils.printlnWarning(MessageUtils.ITEM_IS_NOT_AVAILABLE);
-            return false;
+            return MarketResult.warning(MessageUtils.ITEM_IS_NOT_AVAILABLE);
         }
 
         if (hero.getGold() < item.getPrice()) {
-            ioUtils.printlnWarning(MessageUtils.NOT_ENOUGH_GOLD);
-            return false;
+            return MarketResult.warning(MessageUtils.NOT_ENOUGH_GOLD);
         }
 
         if (hero.getLevel() < item.getLevel()) {
-            ioUtils.printlnWarning(MessageUtils.NOT_ENOUGH_LEVEL);
-            return false;
+            return MarketResult.warning(MessageUtils.NOT_ENOUGH_LEVEL);
         }
 
         hero.spendGold(item.getPrice());
         hero.addItem(item);
         market.removeItem(item);
 
-        ioUtils.printlnSuccess(String.format(MessageUtils.SUCCESSFUL_PURCHASE, hero.getName(), item.getName()));
-        return true;
+        return MarketResult.success(String.format(MessageUtils.SUCCESSFUL_PURCHASE, hero.getName(), item.getName()));
     }
 
     @Override
-    public boolean sellItem(Hero hero, Item item) {
+    public MarketResult sellItem(Hero hero, Item item) {
         if (!hero.hasItem(item)) {
-            ioUtils.printlnFail(MessageUtils.HERO_DOES_NOT_OWN_ITEM_MESSAGE);
-            return false;
+            return MarketResult.fail(MessageUtils.HERO_DOES_NOT_OWN_ITEM_MESSAGE);
         }
 
         int sellValue = calculateSellValue(item.getPrice());
@@ -67,8 +59,7 @@ public class MarketServiceImpl implements MarketService {
         hero.removeItem(item);
         market.addItem(item);
 
-        ioUtils.printlnSuccess(String.format(MessageUtils.SUCCESSFUL_SELL, hero.getName(),  item.getName(), sellValue));
-        return true;
+        return MarketResult.success(String.format(MessageUtils.SUCCESSFUL_SELL, hero.getName(),  item.getName(), sellValue));
     }
 
     private int calculateSellValue(int price) {

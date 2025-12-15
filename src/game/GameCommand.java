@@ -50,8 +50,7 @@ public enum GameCommand {
             "Q/q",
             "quit game",
             game -> {
-                game.getIo().printlnSuccess("Quitting game. Goodbye!");
-                game.stop();
+                game.handleQuit();
             }
     );
 
