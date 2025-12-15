@@ -5,6 +5,7 @@ import monster.Exoskeleton;
 import monster.Monster;
 import monster.Spirit;
 import utils.GameConstants;
+import upload.base.DefaultTextFileReader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public final class MonsterFileLoader {
     }
 
     public static List<Dragon> loadDragons(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int level = Integer.parseInt(parts[1]);
             int damage = Integer.parseInt(parts[2]);
@@ -37,7 +38,7 @@ public final class MonsterFileLoader {
     }
 
     public static List<Exoskeleton> loadExoskeletons(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int level = Integer.parseInt(parts[1]);
             int damage = Integer.parseInt(parts[2]);
@@ -48,7 +49,7 @@ public final class MonsterFileLoader {
     }
 
     public static List<Spirit> loadSpirits(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int level = Integer.parseInt(parts[1]);
             int damage = Integer.parseInt(parts[2]);

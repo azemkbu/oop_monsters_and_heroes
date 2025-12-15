@@ -8,9 +8,9 @@ public final class GenericFileLoader {
     private GenericFileLoader() {
     }
 
-    public static <T> List<T> load(String filePath, LineMapper<T> mapper) {
+    public static <T> List<T> load(TextFileReader reader, String filePath, LineMapper<T> mapper) {
         List<T> result = new ArrayList<>();
-        for (String line : TextFileUtils.readDataLines(filePath)) {
+        for (String line : reader.readDataLines(filePath)) {
             String[] parts = line.split("\\s+");
             if (parts.length == 0) {
                 continue;

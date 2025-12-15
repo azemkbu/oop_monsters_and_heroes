@@ -2,6 +2,7 @@ package upload;
 
 import java.util.List;
 import market.model.item.Weapon;
+import upload.base.DefaultTextFileReader;
 import static upload.base.GenericFileLoader.load;
 
 
@@ -19,7 +20,7 @@ public final class WeaponFileLoader {
     }
 
     public static List<Weapon> loadWeapons(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int price = Integer.parseInt(parts[1]);
             int level = Integer.parseInt(parts[2]);

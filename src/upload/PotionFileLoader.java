@@ -2,6 +2,7 @@ package upload;
 
 import market.model.item.Potion;
 import market.model.item.StatType;
+import upload.base.DefaultTextFileReader;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public final class PotionFileLoader {
     }
 
     public static List<Potion> loadPotions(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int price = Integer.parseInt(parts[1]);
             int requiredLevel = Integer.parseInt(parts[2]);

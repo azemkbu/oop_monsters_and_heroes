@@ -1,6 +1,7 @@
 package upload;
 
 import market.model.item.Armor;
+import upload.base.DefaultTextFileReader;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public final class ArmorFileLoader {
     }
 
     public static List<Armor> loadArmors(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int price = Integer.parseInt(parts[1]);
             int requiredLevel = Integer.parseInt(parts[2]);

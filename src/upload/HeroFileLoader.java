@@ -2,6 +2,7 @@ package upload;
 
 import hero.*;
 import utils.GameConstants;
+import upload.base.DefaultTextFileReader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public final class HeroFileLoader {
     }
 
     public static List<Warrior> loadWarriors(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int mana = Integer.parseInt(parts[1]);
             int strength = Integer.parseInt(parts[2]);
@@ -38,7 +39,7 @@ public final class HeroFileLoader {
     }
 
     public static List<Sorcerer> loadSorcerers(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int mana = Integer.parseInt(parts[1]);
             int strength = Integer.parseInt(parts[2]);
@@ -53,7 +54,7 @@ public final class HeroFileLoader {
     }
 
     public static List<Paladin> loadPaladins(String filePath) {
-        return load(filePath, parts -> {
+        return load(DefaultTextFileReader.get(), filePath, parts -> {
             String name = parts[0];
             int mana = Integer.parseInt(parts[1]);
             int strength = Integer.parseInt(parts[2]);
