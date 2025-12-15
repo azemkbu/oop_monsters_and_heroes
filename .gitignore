@@ -1,0 +1,17 @@
+# OS / IDE
+.DS_Store
+.idea/
+*.iml
+
+# Build output
+out/
+sources.txt
+
+# Assignment spec / local docs (should not be committed)
+Dis.txt
+*.doc
+*.docx
+Legends of Valordoc.txt
+~$*
+
+
