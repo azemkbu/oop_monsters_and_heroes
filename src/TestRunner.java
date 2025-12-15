@@ -79,6 +79,9 @@ public class TestRunner {
         total += run(failures, "lov_controller_monsterVictory", TestRunner::lov_controller_monsterVictory);
         total += run(failures, "lov_controller_marketQuit_stopsImmediately", TestRunner::lov_controller_marketQuit_stopsImmediately);
         total += run(failures, "lov_market_buySell_and_failBranches", TestRunner::lov_market_buySell_and_failBranches);
+        total += run(failures, "lov_weapon_swap_changesDamageAndUses", TestRunner::lov_weapon_swap_changesDamageAndUses);
+        total += run(failures, "lov_armor_reducesDamage_and_breaks_correctly", TestRunner::lov_armor_reducesDamage_and_breaks_correctly);
+        total += run(failures, "lov_potion_strength_increasesAttackDamage", TestRunner::lov_potion_strength_increasesAttackDamage);
 
         if (!failures.isEmpty()) {
             System.err.println("FAILED (" + failures.size() + "):");
@@ -753,6 +756,105 @@ public class TestRunner {
         // Fail: sell not owned
         MarketResult sellFail = svc.sellItem(hero, good);
         assertTrue(!sellFail.isSuccess(), "Selling an unowned item should fail");
+    }
+
+    private static void lov_weapon_swap_changesDamageAndUses() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        Hero hero = newHero("Fighter");
+        map.placeHeroAtNexus(hero, 0); // row 7 col 0
+
+        // Put a monster adjacent at row 6 col 1.
+        Monster m = new TestMonster("M", 1, false, 9999, 0, 0);
+        map.spawnMonster(m, 0);
+        for (int i = 0; i < 6; i++) {
+            assertTrue(map.moveMonsterSouth(m), "Monster should move into range");
+        }
+
+        Weapon w1 = new Weapon("W1", 0, 1, 0, 2, 2);    // no weapon damage
+        Weapon w2 = new Weapon("W2", 0, 1, 100, 2, 2);  // big weapon damage
+        hero.getInventory().add(w1);
+        hero.getInventory().add(w2);
+
+        LovActionExecutor exec = new LovActionExecutor(map, new FixedRandom(0.99, 0));
+
+        // Equip W1, attack -> should consume W1 uses
+        LovActionResult eq1 = exec.execute(HeroActionType.EQUIP, hero, map.getAliveMonsters(), new EquipRequest(EquipChoice.WEAPON, w1, null));
+        assertTrue(eq1.isSuccess(), "Equip W1 should succeed");
+        int hp0 = m.getHp();
+        LovActionResult a1 = exec.execute(HeroActionType.ATTACK, hero, map.getAliveMonsters(), new AttackRequest(m, null));
+        assertTrue(a1.isSuccess(), "Attack with W1 should succeed");
+        int hp1 = m.getHp();
+        int dmg1 = hp0 - hp1;
+        assertTrue(dmg1 >= 0, "Monster HP should not increase");
+        assertEquals(1, w1.getUsesRemaining(), "W1 uses should decrement");
+
+        // Swap to W2, attack -> damage should increase vs W1
+        LovActionResult eq2 = exec.execute(HeroActionType.EQUIP, hero, map.getAliveMonsters(), new EquipRequest(EquipChoice.WEAPON, w2, null));
+        assertTrue(eq2.isSuccess(), "Equip W2 should succeed");
+        int hp2 = m.getHp();
+        LovActionResult a2 = exec.execute(HeroActionType.ATTACK, hero, map.getAliveMonsters(), new AttackRequest(m, null));
+        assertTrue(a2.isSuccess(), "Attack with W2 should succeed");
+        int hp3 = m.getHp();
+        int dmg2 = hp2 - hp3;
+        assertTrue(dmg2 > dmg1, "Weapon swap to higher-damage weapon should increase dealt damage");
+        assertEquals(1, w2.getUsesRemaining(), "W2 uses should decrement");
+    }
+
+    private static void lov_armor_reducesDamage_and_breaks_correctly() {
+        Hero hero = newHero("Tank");
+        int hpStart = hero.getHp();
+
+        Armor armor = new Armor("A", 0, 1, 10, 1); // one use, reduces 10
+        hero.getInventory().add(armor);
+        hero.equipArmor(armor);
+
+        // First hit: reduced by 10, then armor breaks & unequips
+        hero.takeDamage(30);
+        assertEquals(hpStart - 20, hero.getHp(), "Armor should reduce first hit by damageReduction");
+        assertTrue(hero.getEquippedArmor() == null, "Broken armor should be unequipped");
+
+        // Second hit: no reduction
+        hero.takeDamage(30);
+        assertEquals(hpStart - 20 - 30, hero.getHp(), "After armor breaks, subsequent hits should not be reduced");
+    }
+
+    private static void lov_potion_strength_increasesAttackDamage() {
+        LegendsOfValorWorldMap map = new LegendsOfValorWorldMap(new MarketFactory());
+        makeLovDeterministicPlain(map);
+
+        Hero hero = newHero("Buffer");
+        map.placeHeroAtNexus(hero, 0);
+
+        Monster m = new TestMonster("M", 1, false, 9999, 0, 0);
+        map.spawnMonster(m, 0);
+        for (int i = 0; i < 6; i++) {
+            assertTrue(map.moveMonsterSouth(m), "Monster should move into range");
+        }
+
+        // Baseline attack damage with no weapon
+        hero.equipWeapon(null);
+        LovActionExecutor exec = new LovActionExecutor(map, new FixedRandom(0.99, 0));
+        int hp0 = m.getHp();
+        LovActionResult base = exec.execute(HeroActionType.ATTACK, hero, map.getAliveMonsters(), new AttackRequest(m, null));
+        assertTrue(base.isSuccess(), "Baseline attack should succeed");
+        int hp1 = m.getHp();
+        int dmgBase = hp0 - hp1;
+
+        // Use strength potion, then attack again -> damage should increase
+        Potion p = new Potion("STR", 0, 1, 50, StatType.STRENGTH);
+        hero.getInventory().add(p);
+        LovActionResult used = exec.execute(HeroActionType.USE_POTION, hero, map.getAliveMonsters(), new UsePotionRequest(p));
+        assertTrue(used.isSuccess(), "Potion use should succeed");
+
+        int hp2 = m.getHp();
+        LovActionResult after = exec.execute(HeroActionType.ATTACK, hero, map.getAliveMonsters(), new AttackRequest(m, null));
+        assertTrue(after.isSuccess(), "Attack after potion should succeed");
+        int hp3 = m.getHp();
+        int dmgAfter = hp2 - hp3;
+
+        assertTrue(dmgAfter > dmgBase, "Strength potion should increase subsequent attack damage");
     }
 
     // ==================== TEST HELPERS ====================

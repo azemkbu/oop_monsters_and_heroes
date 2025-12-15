@@ -168,15 +168,17 @@ public abstract class Hero implements GamePiece {
         int effectiveDamage = incomingDamage;
 
         Armor armor = getEquippedArmor();
-        if (armor != null) {
+        if (armor != null && armor.isUsable()) {
             effectiveDamage -= armor.getDamageReduction();
             if (effectiveDamage < 0) {
                 effectiveDamage = 0;
             }
 
+            // Armor durability is consumed on each hit.
             armor.consumeUse();
             if (!armor.isUsable()) {
-                return;
+                // Broken armor no longer provides protection on subsequent hits.
+                this.equippedArmor = null;
             }
         }
 
