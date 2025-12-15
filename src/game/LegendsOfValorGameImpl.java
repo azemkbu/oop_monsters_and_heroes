@@ -206,16 +206,27 @@ public class LegendsOfValorGameImpl {
     private void renderActionResult(LovActionResult result) {
         if (result == null) {
             view.showFail(MessageUtils.UNKNOWN_COMMAND);
+            view.waitForUserAcknowledge();
             return;
         }
+
+        boolean hasMessages = false;
         for (String msg : result.getFailMessages()) {
             view.showFail(msg);
+            hasMessages = true;
         }
         for (String msg : result.getWarningMessages()) {
             view.showWarning(msg);
+            hasMessages = true;
         }
         for (String msg : result.getSuccessMessages()) {
             view.showSuccess(msg);
+            hasMessages = true;
+        }
+
+        // If there were any messages (especially failures), pause so user can read them
+        if (hasMessages) {
+            view.waitForUserAcknowledge();
         }
     }
 
@@ -227,17 +238,16 @@ public class LegendsOfValorGameImpl {
                 continue;
             }
 
+            // 1. If hero in range, attack
             List<Hero> targets = worldMap.getHeroesInRange(monster);
             if (!targets.isEmpty()) {
                 Hero target = targets.get(rng.nextInt(targets.size()));
                 monsterAttack(monster, target);
                 continue;
             }
-            
 
-            worldMap.moveMonsterSouth(monster);
-            
-
+            // 2. Try to move intelligently (seek heroes, avoid obstacles)
+            moveMonsterIntelligently(monster);
         }
 
         // End-of-round recovery for alive heroes (keeps original feel)
@@ -246,6 +256,52 @@ public class LegendsOfValorGameImpl {
                 hero.recoverAfterRound();
             }
         }
+    }
+
+    /**
+     * Monster AI movement logic using BFS pathfinding:
+     * 1. Find the closest hero
+     * 2. Use BFS to find the shortest reachable path to that hero
+     * 3. Move to the first step of that path
+     * 4. If no path found, try fallback movement (south/east/west)
+     */
+    private void moveMonsterIntelligently(Monster monster) {
+        Hero targetHero = worldMap.findClosestHero(monster);
+        if (targetHero == null) {
+            // No heroes, just try to move south
+            tryMoveMonsterWithFallback(monster);
+            return;
+        }
+
+        // Use BFS to find the next step toward the target hero
+        int[] nextStep = worldMap.findNextStepTowardHero(monster, targetHero);
+        if (nextStep != null) {
+            // Move to the first step of the shortest path
+            if (worldMap.moveMonsterTo(monster, nextStep[0], nextStep[1])) {
+                return;
+            }
+        }
+
+        // If BFS path not available, try fallback movement
+        tryMoveMonsterWithFallback(monster);
+    }
+
+    /**
+     * Fallback movement: try south, then east, then west
+     */
+    private void tryMoveMonsterWithFallback(Monster monster) {
+        if (worldMap.moveMonsterSouth(monster)) {
+            return;
+        }
+        // Blocked south - try east or west randomly
+        if (rng.nextBoolean()) {
+            if (worldMap.moveMonsterEast(monster)) return;
+            if (worldMap.moveMonsterWest(monster)) return;
+        } else {
+            if (worldMap.moveMonsterWest(monster)) return;
+            if (worldMap.moveMonsterEast(monster)) return;
+        }
+        // Monster is stuck - can't move this turn
     }
 
     private void monsterAttack(Monster monster, Hero hero) {

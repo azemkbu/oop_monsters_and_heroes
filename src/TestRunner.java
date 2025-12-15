@@ -1174,6 +1174,9 @@ public class TestRunner {
 
         @Override
         public void showWarning(String message) { warningCount++; }
+
+        @Override
+        public void waitForUserAcknowledge() { /* no-op for tests */ }
     }
 
     private static final class FakeBattleView implements BattleView {

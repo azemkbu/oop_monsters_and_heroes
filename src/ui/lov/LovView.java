@@ -83,6 +83,11 @@ public interface LovView {
     void showFail(String message);
 
     void showWarning(String message);
+
+    /**
+     * Pauses for user to read messages (press any key to continue).
+     */
+    void waitForUserAcknowledge();
 }
 
 

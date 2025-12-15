@@ -384,4 +384,10 @@ public final class ConsoleLovView implements LovView {
     public void showWarning(String message) {
         io.printlnWarning(message);
     }
+
+    @Override
+    public void waitForUserAcknowledge() {
+        io.printPrompt("[Press ENTER to continue]");
+        io.readLine();
+    }
 }

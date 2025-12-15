@@ -433,53 +433,202 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
 
 
-     public boolean moveMonsterEast(Monster monster) {
+    public boolean moveMonsterEast(Monster monster) {
         int[] pos = monsterPositions.get(monster);
         if (pos == null) return false;
 
-        int newRow = pos[0];
-        int col = pos[0] - 1; // Move east
+        int row = pos[0];
+        int newCol = pos[1] + 1; // Move east (col increases)
 
-        if (newRow >= size) return false;
+        if (newCol >= size) return false;
 
-        Tile tile = getTile(newRow, col);
-        if (!tile.isAccessible()) return false;
+        Tile tile = getTile(row, newCol);
+        if (tile == null || !tile.isAccessible()) return false;
 
         // Check if another monster is there
-        if (getMonsterAt(newRow, col) != null) return false;
+        if (getMonsterAt(row, newCol) != null) return false;
 
         // Monsters cannot move onto a hero tile (they must attack when in range)
-        if (getHeroAt(newRow, col) != null) return false;
+        if (getHeroAt(row, newCol) != null) return false;
 
         // Update position (both Map and GamePiece)
-        monsterPositions.put(monster, new int[]{newRow, col});
-        monster.setPosition(newRow, col);  // Sync GamePiece position
+        monsterPositions.put(monster, new int[]{row, newCol});
+        monster.setPosition(row, newCol);
         return true;
     }
-
 
     public boolean moveMonsterWest(Monster monster) {
         int[] pos = monsterPositions.get(monster);
         if (pos == null) return false;
 
-        int newRow = pos[0];
-        int col = pos[0] + 1; // Move west
+        int row = pos[0];
+        int newCol = pos[1] - 1; // Move west (col decreases)
 
-        if (newRow >= size) return false;
+        if (newCol < 0) return false;
 
-        Tile tile = getTile(newRow, col);
-        if (!tile.isAccessible()) return false;
+        Tile tile = getTile(row, newCol);
+        if (tile == null || !tile.isAccessible()) return false;
 
         // Check if another monster is there
-        if (getMonsterAt(newRow, col) != null) return false;
+        if (getMonsterAt(row, newCol) != null) return false;
 
         // Monsters cannot move onto a hero tile (they must attack when in range)
-        if (getHeroAt(newRow, col) != null) return false;
+        if (getHeroAt(row, newCol) != null) return false;
 
         // Update position (both Map and GamePiece)
-        monsterPositions.put(monster, new int[]{newRow, col});
-        monster.setPosition(newRow, col);  // Sync GamePiece position
+        monsterPositions.put(monster, new int[]{row, newCol});
+        monster.setPosition(row, newCol);
         return true;
+    }
+
+    /**
+     * Finds the closest hero to a monster that the monster could pursue.
+     * Returns null if no heroes are alive.
+     */
+    public Hero findClosestHero(Monster monster) {
+        int[] monsterPos = monsterPositions.get(monster);
+        if (monsterPos == null) return null;
+
+        Hero closest = null;
+        int minDist = Integer.MAX_VALUE;
+
+        for (Hero h : heroes) {
+            if (!h.isAlive()) continue;
+            int[] heroPos = heroPositions.get(h);
+            if (heroPos == null) continue;
+
+            int dist = Math.abs(monsterPos[0] - heroPos[0]) + Math.abs(monsterPos[1] - heroPos[1]);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = h;
+            }
+        }
+        return closest;
+    }
+
+    /**
+     * Uses BFS to find the first step of the shortest path from monster to target hero.
+     * Returns the next position [row, col] the monster should move to, or null if no path exists.
+     */
+    public int[] findNextStepTowardHero(Monster monster, Hero targetHero) {
+        int[] monsterPos = monsterPositions.get(monster);
+        int[] heroPos = heroPositions.get(targetHero);
+        if (monsterPos == null || heroPos == null) return null;
+
+        int startRow = monsterPos[0];
+        int startCol = monsterPos[1];
+        int goalRow = heroPos[0];
+        int goalCol = heroPos[1];
+
+        // If already adjacent, no need to move
+        if (isAdjacent(startRow, startCol, goalRow, goalCol)) {
+            return null;
+        }
+
+        // BFS to find shortest path
+        // parent[row][col] stores the previous position in the path
+        int[][][] parent = new int[size][size][];
+        boolean[][] visited = new boolean[size][size];
+
+        java.util.Queue<int[]> queue = new java.util.LinkedList<>();
+        queue.offer(new int[]{startRow, startCol});
+        visited[startRow][startCol] = true;
+
+        // 4-directional movement (up, down, left, right)
+        int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+
+        while (!queue.isEmpty()) {
+            int[] current = queue.poll();
+            int row = current[0];
+            int col = current[1];
+
+            // Check if we've reached adjacent to goal (attack range)
+            if (isAdjacent(row, col, goalRow, goalCol)) {
+                // Reconstruct path back to find first step from start
+                return reconstructFirstStep(parent, startRow, startCol, row, col);
+            }
+
+            for (int[] dir : directions) {
+                int newRow = row + dir[0];
+                int newCol = col + dir[1];
+
+                if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) continue;
+                if (visited[newRow][newCol]) continue;
+
+                Tile tile = getTile(newRow, newCol);
+                if (tile == null || !tile.isAccessible()) continue;
+
+                // Monster cannot move onto another monster's cell
+                if (getMonsterAt(newRow, newCol) != null) continue;
+
+                // Monster cannot move onto a hero's cell (must attack from adjacent)
+                if (getHeroAt(newRow, newCol) != null && !(newRow == goalRow && newCol == goalCol)) continue;
+
+                visited[newRow][newCol] = true;
+                parent[newRow][newCol] = new int[]{row, col};
+                queue.offer(new int[]{newRow, newCol});
+            }
+        }
+
+        // No path found
+        return null;
+    }
+
+    /**
+     * Reconstructs the first step from start position by tracing back from end.
+     */
+    private int[] reconstructFirstStep(int[][][] parent, int startRow, int startCol, int endRow, int endCol) {
+        int row = endRow;
+        int col = endCol;
+
+        // Trace back until we find the cell whose parent is the start
+        while (parent[row][col] != null) {
+            int[] prev = parent[row][col];
+            if (prev[0] == startRow && prev[1] == startCol) {
+                // This cell is the first step from start
+                return new int[]{row, col};
+            }
+            row = prev[0];
+            col = prev[1];
+        }
+        return null;
+    }
+
+    /**
+     * Moves a monster to a specific position (used by BFS pathfinding).
+     * @return true if successful
+     */
+    public boolean moveMonsterTo(Monster monster, int newRow, int newCol) {
+        int[] pos = monsterPositions.get(monster);
+        if (pos == null) return false;
+
+        if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) return false;
+
+        Tile tile = getTile(newRow, newCol);
+        if (tile == null || !tile.isAccessible()) return false;
+
+        if (getMonsterAt(newRow, newCol) != null) return false;
+        if (getHeroAt(newRow, newCol) != null) return false;
+
+        monsterPositions.put(monster, new int[]{newRow, newCol});
+        monster.setPosition(newRow, newCol);
+        return true;
+    }
+
+    /**
+     * Gets the lane (0, 1, 2) a monster is in, or -1 if not on map.
+     */
+    public int getMonsterLane(Monster monster) {
+        int[] pos = monsterPositions.get(monster);
+        if (pos == null) return -1;
+        int col = pos[1];
+        for (int i = 0; i < LANE_COLUMNS.length; i++) {
+            int[] laneCols = LANE_COLUMNS[i];
+            if (col >= laneCols[0] && col <= laneCols[1]) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
