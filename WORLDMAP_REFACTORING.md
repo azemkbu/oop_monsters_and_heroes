@@ -515,6 +515,51 @@ public void monsterTurn(Monster monster) {
 
 ---
 
+## Change Log
+
+### December 15, 2025
+
+#### LOV Map UI - Block-Style Colored Cells
+
+**Problem:** LOV map UI was using ASCII table borders (`+---+`) which was completely different from the original LOV project style.
+
+**Solution:** Rewrote `LegendsMapFormatter` to use block-style colored cells matching the original `LOVWorldFormatter.java`:
+
+| Before | After |
+|--------|-------|
+| ASCII table `+---+` | Colored background blocks |
+| 3 chars wide × 1 line | 4 chars wide × 2 lines (square) |
+| No lane labels | `◄ TOP ►  ◄ MID ►  ◄ BOT ►` |
+| No nexus labels | `◄ Monster Nexus` / `◄ Hero Nexus` |
+| Hard to distinguish terrain | 9 distinct 256-color backgrounds |
+
+**Files Changed:**
+- `src/ui/formatter/LegendsMapFormatter.java` - Complete rewrite
+
+---
+
+#### Refresh Mode UI
+
+**Problem:** LOV console UI was using "append" mode - each action added more text, causing endless scrolling.
+
+**Solution:** Implemented "refresh" mode - clear screen and redraw before each hero's turn.
+
+**Changes:**
+- Added `clearScreen()` to `IOUtils` / `ConsoleIOUtils`
+- Added `refreshDisplay(round, heroes, monsters)` to `LovView` / `ConsoleLovView`
+- Each hero's turn now: clear screen → render map → show status → show action menu
+- Renamed "BATTLE INFORMATION" to "STATUS" (less misleading)
+
+**Files Changed:**
+- `src/utils/IOUtils.java`
+- `src/utils/ConsoleIOUtils.java`
+- `src/ui/lov/LovView.java`
+- `src/ui/lov/ConsoleLovView.java`
+- `src/game/LegendsOfValorGameImpl.java`
+- `src/TestRunner.java`
+
+---
+
 ## Questions?
 
 Feel free to reach out if you have any questions about the implementation or need any changes!
