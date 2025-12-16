@@ -1,0 +1,40 @@
+package game.lov;
+
+import battle.menu.BattleMenu;
+import battle.menu.BattleMenuImpl;
+import game.Game;
+import game.GameFactory;
+import game.PartyFactoryUtil;
+import hero.Hero;
+import hero.Party;
+import market.service.MarketFactory;
+import monster.MonsterFactory;
+import utils.GameConstants;
+import utils.IOUtils;
+import worldMap.LegendsOfValorWorldMap;
+
+import java.util.List;
+
+public class LegendsOfValorGameFactory implements GameFactory {
+
+    @Override
+    public Game createGame(IOUtils ioUtils, List<Hero> availableHeroes) {
+        Party party = PartyFactoryUtil.chooseParty(
+                availableHeroes, ioUtils,
+                GameConstants.LOV_HEROES_PER_TEAM,
+                GameConstants.LOV_HEROES_PER_TEAM
+        );
+
+        MarketFactory marketFactory = new MarketFactory();
+        LegendsOfValorWorldMap worldMap = new LegendsOfValorWorldMap(marketFactory, ioUtils);
+
+        for (int lane = 0; lane < Math.min(party.getHeroes().size(), LegendsOfValorWorldMap.LANE_COLUMNS.length); lane++) {
+            worldMap.placeHeroAtNexus(party.getHeroes().get(lane), lane);
+        }
+
+        BattleMenu battleMenu = new BattleMenuImpl(ioUtils);
+        MonsterFactory monsterFactory = new MonsterFactory();
+
+        return new LegendsOfValorGameImpl(worldMap, party, battleMenu, monsterFactory, ioUtils);
+    }
+}

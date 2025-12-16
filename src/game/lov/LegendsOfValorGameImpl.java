@@ -1,11 +1,12 @@
-package game;
+package game.lov;
 
 import battle.enums.HeroActionType;
 import battle.heroAction.BattleActionsConfig;
 import battle.heroAction.BattleContext;
-import battle.heroAction.GameType;
 import battle.heroAction.HeroActionStrategy;
 import battle.menu.BattleMenu;
+import game.Game;
+import game.GameType;
 import hero.Hero;
 import hero.Party;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import worldMap.enums.Direction;
  * - Heroes win if any hero reaches the Monster Nexus row
  * - Monsters win if any monster reaches the Hero Nexus row, or all heroes are defeated
  */
-public class LegendsOfValorGameImpl {
+public class LegendsOfValorGameImpl implements Game {
 
     private final LegendsOfValorWorldMap worldMap;
     private final Party party;
@@ -73,7 +74,7 @@ public class LegendsOfValorGameImpl {
         while (running) {
             // Respawn dead heroes at their Nexus with full HP/MP (per Dis.txt)
             respawnDeadHeroes();
-            
+
             io.printlnHeader("===== Round " + round + " =====");
             worldMap.printMap();
             if (wantsQuitThisRound()) {
@@ -119,6 +120,11 @@ public class LegendsOfValorGameImpl {
 
             round++;
         }
+    }
+
+    @Override
+    public void stop() {
+        running = false;
     }
 
     private void runHeroesTurn(Map<HeroActionType, HeroActionStrategy> actions, BattleContext context) {
@@ -175,7 +181,7 @@ public class LegendsOfValorGameImpl {
                 monsterAttack(monster, target);
                 continue;
             }
-            
+
             // 2. Try to move intelligently (seek heroes)
             Hero closestHero = worldMap.findClosestHero(monster);
             if (closestHero != null) {
@@ -197,7 +203,7 @@ public class LegendsOfValorGameImpl {
             }
         }
     }
-    
+
     private void moveMonsterInDirection(Monster monster, Direction dir) {
         switch (dir) {
             case UP:

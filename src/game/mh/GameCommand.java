@@ -1,4 +1,4 @@
-package game;
+package game.mh;
 
 import worldMap.enums.Direction;
 
@@ -37,13 +37,13 @@ public enum GameCommand {
             'm',
             "M/m",
             "enter market (if on market tile)",
-            Game::handleEnterMarket
+            MHCommandGame::handleEnterMarket
     ),
     SHOW_PARTY(
             'i',
             "I/i",
             "show party info",
-            Game::showPartyInfo
+            MHCommandGame::showPartyInfo
     ),
     QUIT(
             'q',
@@ -58,10 +58,10 @@ public enum GameCommand {
     private final char key;
     private final String label;
     private final String description;
-    private final Consumer<Game> action;
+    private final Consumer<MHCommandGame> action;
 
 
-    GameCommand(char key, String description, String label, Consumer<Game> action) {
+    GameCommand(char key, String description, String label, Consumer<MHCommandGame> action) {
         this.key = key;
         this.description = description;
         this.label = label;
@@ -78,7 +78,7 @@ public enum GameCommand {
         return description;
     }
 
-    public void execute(Game game) {
+    public void execute(MHCommandGame game) {
         action.accept(game);
     }
 

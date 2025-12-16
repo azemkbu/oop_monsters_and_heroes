@@ -1,6 +1,7 @@
-package game;
+package game.mh;
 
 import battle.engine.BattleEngine;
+import game.Game;
 import hero.Hero;
 import hero.Party;
 import market.ui.MarketMenuImpl;
@@ -16,7 +17,6 @@ import worldMap.Tile;
 import worldMap.enums.TileType;
 import worldMap.IWorldMap;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static utils.ConsoleColors.*;
@@ -24,7 +24,7 @@ import static utils.ConsoleColors.*;
 /**
  * Implementation of the {@link Game} interface
  */
-public class GameImpl implements Game {
+public class MonstersAndHeroesCommandGameImpl implements MHCommandGame {
 
     private final IWorldMap worldMap;
     private final Party party;
@@ -32,10 +32,10 @@ public class GameImpl implements Game {
     private final IOUtils io;
     private boolean running = false;
 
-    public GameImpl(IWorldMap worldMap,
-                    Party party,
-                    BattleEngine battleEngine,
-                    IOUtils ioUtils) {
+    public MonstersAndHeroesCommandGameImpl(IWorldMap worldMap,
+                                            Party party,
+                                            BattleEngine battleEngine,
+                                            IOUtils ioUtils) {
         this.worldMap = worldMap;
         this.party = party;
         this.battleEngine = battleEngine;
@@ -180,7 +180,7 @@ public class GameImpl implements Game {
     private void printGameInstructions() {
         io.printlnHeader(CYAN  + MessageUtils.CONTROLS_HEADER);
 
-        List<GameCommand> commands = Arrays.asList(GameCommand.values());
+        GameCommand[] commands = GameCommand.values();
 
         int maxLabelLen = "Keys".length();
         int maxDescLen  = "Action".length();
@@ -199,7 +199,7 @@ public class GameImpl implements Game {
                 "Keys", "Action"
         );
 
-        String border = "+" + repeat('-', headerRow.length() - 2) + "+";
+        String border = "+" + repeat(headerRow.length() - 2) + "+";
 
         io.printlnTitle(CYAN + border);
         io.printlnTitle(CYAN + headerRow);
@@ -217,10 +217,10 @@ public class GameImpl implements Game {
         io.printlnTitle(CYAN + border);
     }
 
-    private String repeat(char c, int count) {
+    private String repeat(int count) {
         StringBuilder sb = new StringBuilder(count);
         for (int i = 0; i < count; i++) {
-            sb.append(c);
+            sb.append('-');
         }
         return sb.toString();
     }

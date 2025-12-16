@@ -8,6 +8,8 @@ import battle.heroAction.impl.mh.MHAttackAction;
 import battle.heroAction.impl.mh.MhCastSpellAction;
 import java.util.HashMap;
 import java.util.Map;
+
+import game.GameType;
 import utils.IOUtils;
 import worldMap.ILegendsWorldMap;
 import worldMap.IWorldMap;

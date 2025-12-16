@@ -1,4 +1,4 @@
-package battle.heroAction;
+package game;
 
 public enum GameType {
     MONSTERS_AND_HEROES,

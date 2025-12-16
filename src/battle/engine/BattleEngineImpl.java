@@ -1,7 +1,7 @@
 package battle.engine;
 
 import battle.heroAction.BattleContext;
-import battle.heroAction.GameType;
+import game.GameType;
 import battle.menu.BattleMenu;
 import battle.enums.HeroActionType;
 import battle.heroAction.HeroActionStrategy;
