@@ -1,0 +1,22 @@
+# Compiled output
+out/
+*.class
+
+# IDE files
+.DS_Store
+.idea/
+*.iml
+
+# Assignment documents (should not be in repo)
+*.doc
+*.docx
+~$*.doc
+Dis.txt
+Legends of Valordoc.txt
+
+# Audio files
+*.mp3
+
+# Temporary files
+sources.txt
+
