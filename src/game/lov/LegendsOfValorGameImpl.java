@@ -156,11 +156,23 @@ public class LegendsOfValorGameImpl implements Game {
                 continue;
             }
 
-            boolean turn = strategy.execute(hero, aliveMonsters, context, io);
+            boolean turnCompleted = strategy.execute(hero, aliveMonsters, context, io);
             if (!running) return;
 
-            if(!turn){
-                runHeroesTurn(actions, context);
+            // If action failed, let the hero retry (don't recursively restart all heroes)
+            while (!turnCompleted && running) {
+                io.printlnWarning("Action failed. Please choose another action.");
+                actionType = battleMenu.chooseActionForHero(hero, worldMap.getAliveMonsters());
+                if (!running) return;
+                
+                if (actionType == HeroActionType.SKIP) {
+                    break; // Allow hero to skip if they want
+                }
+                
+                strategy = actions.get(actionType);
+                if (strategy != null) {
+                    turnCompleted = strategy.execute(hero, aliveMonsters, context, io);
+                }
             }
 
             cleanupDeadMonstersAndReward(hero);
