@@ -65,6 +65,15 @@ public abstract class Hero implements GamePiece {
 
     public abstract String getHeroClassName();
 
+    /**
+     * Gets the base attack range for this hero class (in tiles).
+     * Subclasses override to define their range.
+     * Default is 1 (melee range).
+     */
+    public int getBaseAttackRange() {
+        return 1;
+    }
+
     private int computeHpForLevel(int lvl) {
         return lvl * HERO_HP_PER_LEVEL;
     }
@@ -244,6 +253,10 @@ public abstract class Hero implements GamePiece {
 
     public int getHp() {
         return hp;
+    }
+
+    public int getMaxHp() {
+        return level * HERO_HP_PER_LEVEL;
     }
 
     public int getMp() {
