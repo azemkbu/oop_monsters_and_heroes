@@ -1,4 +1,4 @@
-# CS611-Assignment <Legends of Valor>
+# CS611-Assignment Legends of Valor
 
 -------------------------------------------------------------
 - Name: Azem Kakitaeva, Zhengzheng Tang, Antony Ponomarev
