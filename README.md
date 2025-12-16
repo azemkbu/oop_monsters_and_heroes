@@ -1,4 +1,4 @@
-# CS611-Assignment <Legends: Monsters and Heroes>
+# CS611-Assignment <Legends of Valor>
 -------------------------------------------------------------
 --------------
 - Name: Azem Kakitaeva, Zhengzheng Tang, Antony Ponomarev
