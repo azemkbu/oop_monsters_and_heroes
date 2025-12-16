@@ -124,7 +124,7 @@ public class LegendsOfValorGameImpl implements Game {
 
     @Override
     public void stop() {
-        running = false;
+        this.running = false;
     }
 
     private void runHeroesTurn(Map<HeroActionType, HeroActionStrategy> actions, BattleContext context) {
