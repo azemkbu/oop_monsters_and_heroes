@@ -92,6 +92,7 @@ public class LegendsOfValorGameImpl implements Game {
             }
 
             runHeroesTurn(actions, context);
+            if (!running) return;
 
             if (worldMap.isHeroVictory()) {
                 io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -103,6 +104,7 @@ public class LegendsOfValorGameImpl implements Game {
             }
 
             runMonstersTurn();
+            if (!running) return;
 
             if (worldMap.isHeroVictory()) {
                 io.printlnSuccess("Heroes win! A hero reached the Monster Nexus.");
@@ -131,38 +133,36 @@ public class LegendsOfValorGameImpl implements Game {
         List<Hero> heroes = party.getHeroes();
 
         for (Hero hero : heroes) {
-            if (!hero.isAlive()) {
-                continue;
-            }
+            if (!running) return;
+            if (!hero.isAlive()) continue;
 
             maybeEnterMarket(hero);
+            if (!running) return;
 
             List<Monster> aliveMonsters = worldMap.getAliveMonsters();
             battleMenu.showBattleStatus(worldMap.getAliveHeroes(), aliveMonsters);
 
             HeroActionType actionType = battleMenu.chooseActionForHero(hero, aliveMonsters);
+            if (!running) return;
+
             if (actionType == HeroActionType.SKIP) {
                 io.printlnWarning(String.format(MessageUtils.SKIP_TURN, hero.getName()));
                 continue;
             }
 
             HeroActionStrategy strategy = actions.get(actionType);
-            System.out.println(actionType);
             if (strategy == null) {
                 io.printlnFail(MessageUtils.UNKNOWN_COMMAND);
                 continue;
             }
 
             strategy.execute(hero, aliveMonsters, context, io);
+            if (!running) return;
 
             cleanupDeadMonstersAndReward(hero);
 
-            if (worldMap.isHeroVictory()) {
-                return;
-            }
-            if (party.allHeroesDefeated()) {
-                return;
-            }
+            if (worldMap.isHeroVictory()) return;
+            if (worldMap.isMonsterVictory() || party.allHeroesDefeated()) return;
         }
     }
 
@@ -170,9 +170,8 @@ public class LegendsOfValorGameImpl implements Game {
         List<Monster> monsters = new ArrayList<>(worldMap.getAliveMonsters());
 
         for (Monster monster : monsters) {
-            if (!monster.isAlive()) {
-                continue;
-            }
+            if (!running) return;
+            if (!monster.isAlive()) continue;
 
             // 1. If hero in range, attack
             List<Hero> targets = worldMap.getHeroesInRange(monster);
