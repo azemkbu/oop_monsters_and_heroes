@@ -261,11 +261,16 @@ public final class LegendsMapFormatter {
             "  " + BG_CAVE + "    " + RESET + "                " +
             BG_KOULOU + "    " + RESET));
 
-        // Row 4: Wall
+        // Row 4: Wall & Obstacle
         legend.add(new RenderedLine(LineKind.TITLE, 
             "  " + BG_WALL + "    " + RESET + " Wall (impassable)"));
         legend.add(new RenderedLine(LineKind.TITLE, 
             "  " + BG_WALL + "    " + RESET));
+        
+        legend.add(new RenderedLine(LineKind.TITLE, 
+            "  " + BG_OBSTACLE + "    " + RESET + " Obstacle (removable)"));
+        legend.add(new RenderedLine(LineKind.TITLE, 
+            "  " + BG_OBSTACLE + "    " + RESET));
 
         // Row 5: Hero & Monster markers
         legend.add(new RenderedLine(LineKind.TITLE, 
