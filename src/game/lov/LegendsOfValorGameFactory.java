@@ -7,13 +7,20 @@ import game.GameFactory;
 import game.PartyFactoryUtil;
 import hero.Hero;
 import hero.Party;
+import java.util.List;
 import market.service.MarketFactory;
 import monster.MonsterFactory;
 import utils.GameConstants;
 import utils.IOUtils;
 import worldMap.LegendsOfValorWorldMap;
 
-import java.util.List;
+
+/*
+*
+* Using GameFactory interface, creates a new legends of valor game.
+*   
+*
+*/
 
 public class LegendsOfValorGameFactory implements GameFactory {
 
