@@ -21,7 +21,7 @@ import worldMap.feature.NexusFeature;
  * Implementation of {@link IWorldMap} for Legends of Valor game.
  * Represents an 8x8 grid divided into three lanes separated by walls.
  * Manages hero and monster positions via GamePiece interface.
- * 
+ *
  * Layout:
  * - Columns 0-1: Top Lane
  * - Column 2: Wall (Inaccessible)
@@ -68,19 +68,19 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     // ==================== ENTITY MANAGEMENT ====================
     // Track entity positions for quick lookup
     // Key: Entity, Value: int[]{row, col}
-    
+
     /** Hero positions: maps each hero to their [row, col] */
     private final Map<Hero, int[]> heroPositions;
-    
+
     /** Monster positions: maps each monster to their [row, col] */
     private final Map<Monster, int[]> monsterPositions;
-    
+
     /** All heroes in this game */
     private final List<Hero> heroes;
-    
+
     /** All monsters currently on the map */
     private final List<Monster> monsters;
-    
+
     /** Maps each hero to their assigned lane (for recall) */
     private final Map<Hero, Integer> heroLanes;
 
@@ -94,14 +94,14 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         this.grid = new Tile[size][size];
         this.marketFactory = marketFactory;
         this.ioUtils = ioUtils;
-        
+
         // Initialize entity management
         this.heroPositions = new HashMap<>();
         this.monsterPositions = new HashMap<>();
         this.heroes = new ArrayList<>();
         this.monsters = new ArrayList<>();
         this.heroLanes = new HashMap<>();
-        
+
         generateLayout();
     }
 
@@ -110,9 +110,9 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /**
      * Gets any GamePiece (Hero or Monster) at the specified position.
      * This is the unified query method for all game pieces.
-     * 
+     *
      * Uses GamePiece interface for polymorphic access.
-     * 
+     *
      * @param row the row
      * @param col the column
      * @return the GamePiece at that position, or null if none
@@ -120,10 +120,10 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     public GamePiece getPieceAt(int row, int col) {
         Hero hero = getHeroAt(row, col);
         if (hero != null) return hero;
-        
+
         Monster monster = getMonsterAt(row, col);
         if (monster != null) return monster;
-        
+
         return null;
     }
 
@@ -142,20 +142,20 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /**
      * Places a hero at their starting position (Hero Nexus).
      * Heroes spawn in the left column of their lane.
-     * 
+     *
      * Also updates the Hero's position via GamePiece interface.
-     * 
+     *
      * @param hero The hero to place
      * @param lane The lane to place them in (0=top, 1=mid, 2=bot)
      */
     public void placeHeroAtNexus(Hero hero, int lane) {
         int row = HERO_NEXUS_ROW;
         int col = LANE_COLUMNS[lane][0]; // Left column of lane
-        
+
         heroPositions.put(hero, new int[]{row, col});
         hero.setPosition(row, col);  // Sync GamePiece position
         heroLanes.put(hero, lane);
-        
+
         if (!heroes.contains(hero)) {
             heroes.add(hero);
         }
@@ -222,7 +222,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
      * Moves a hero in the specified direction.
      * Validates: bounds, accessibility, not occupied by another hero,
      * and cannot move behind (north of) a monster without killing it.
-     * 
+     *
      * @param hero the hero to move
      * @param direction the direction to move
      * @return true if the move was successful
@@ -245,6 +245,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         }
 
         // Heroes CAN move onto a monster tile (co-occupancy allowed per Dis.txt)
+        // Combat is handled via attack actions
 
         // Check if trying to move behind (north of) a monster
         if (direction == Direction.UP) {
@@ -283,7 +284,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
      * - Cannot teleport ahead of target hero
      * - Cannot teleport to occupied position
      * - Cannot teleport behind a monster
-     * 
+     *
      * @param hero the hero to teleport
      * @param targetHero the hero to teleport near
      * @return true if teleport successful
@@ -291,7 +292,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     public boolean teleportHero(Hero hero, Hero targetHero) {
         int[] fromPos = heroPositions.get(hero);
         int[] targetPos = heroPositions.get(targetHero);
-        
+
         if (fromPos == null || targetPos == null) return false;
 
         int fromLane = getLaneIndex(fromPos[1]);
@@ -336,16 +337,16 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /**
      * Spawns a monster at the Monster Nexus.
      * Monsters spawn in the right column of their lane.
-     * 
+     *
      * Also updates the Monster's position via GamePiece interface.
-     * 
+     *
      * @param monster the monster to spawn
      * @param lane the lane to spawn in (0=top, 1=mid, 2=bot)
      */
     public void spawnMonster(Monster monster, int lane) {
         int row = MONSTER_NEXUS_ROW;
         int col = LANE_COLUMNS[lane][1]; // Right column of lane
-        
+
         // Do not spawn on top of an existing piece.
         if (getHeroAt(row, col) != null || getMonsterAt(row, col) != null) {
             return;
@@ -436,14 +437,14 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
 
 
-     public boolean moveMonsterEast(Monster monster) {
+    public boolean moveMonsterEast(Monster monster) {
         int[] pos = monsterPositions.get(monster);
         if (pos == null) return false;
 
         int newRow = pos[0];
-        int col = pos[1] + 1; // Move east (FIXED: was pos[0] - 1)
+        int col = pos[0] - 1; // Move east
 
-        if (col >= size) return false; // FIXED: check column bounds
+        if (newRow >= size) return false;
 
         Tile tile = getTile(newRow, col);
         if (!tile.isAccessible()) return false;
@@ -466,9 +467,9 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         if (pos == null) return false;
 
         int newRow = pos[0];
-        int col = pos[1] - 1; // Move west (FIXED: was pos[0] + 1)
+        int col = pos[0] + 1; // Move west
 
-        if (col < 0) return false; // FIXED: check column bounds
+        if (newRow >= size) return false;
 
         Tile tile = getTile(newRow, col);
         if (!tile.isAccessible()) return false;
@@ -494,74 +495,12 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         monsters.remove(monster);
     }
 
-    /**
-     * Finds the closest alive hero to the given monster using BFS.
-     * Returns null if no hero is reachable.
-     */
-    public Hero findClosestHero(Monster monster) {
-        int[] monsterPos = monsterPositions.get(monster);
-        if (monsterPos == null) return null;
-
-        Hero closest = null;
-        int minDist = Integer.MAX_VALUE;
-
-        for (Hero hero : heroes) {
-            if (!hero.isAlive()) continue;
-            int[] heroPos = heroPositions.get(hero);
-            if (heroPos == null) continue;
-
-            // Simple Manhattan distance (good enough for seeking)
-            int dist = Math.abs(monsterPos[0] - heroPos[0]) + Math.abs(monsterPos[1] - heroPos[1]);
-            if (dist < minDist) {
-                minDist = dist;
-                closest = hero;
-            }
-        }
-        return closest;
-    }
-
-    /**
-     * Gets the next step direction for monster to move toward a target hero.
-     * Returns the best direction to move, or null if no valid move.
-     */
-    public Direction findNextStepTowardHero(Monster monster, Hero target) {
-        int[] monsterPos = monsterPositions.get(monster);
-        int[] targetPos = heroPositions.get(target);
-        if (monsterPos == null || targetPos == null) return null;
-
-        int mRow = monsterPos[0], mCol = monsterPos[1];
-        int tRow = targetPos[0], tCol = targetPos[1];
-
-        // Priority: South first (toward hero nexus), then East/West to get closer
-        Direction best = null;
-        int bestDist = Integer.MAX_VALUE;
-
-        // Try all 4 directions
-        Direction[] dirs = {Direction.DOWN, Direction.LEFT, Direction.RIGHT, Direction.UP};
-        for (Direction dir : dirs) {
-            int newRow = mRow + dir.getRow();
-            int newCol = mCol + dir.getCol();
-
-            if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) continue;
-            Tile tile = getTile(newRow, newCol);
-            if (!tile.isAccessible()) continue;
-            if (getMonsterAt(newRow, newCol) != null) continue; // Don't stack monsters
-
-            int dist = Math.abs(newRow - tRow) + Math.abs(newCol - tCol);
-            if (dist < bestDist) {
-                bestDist = dist;
-                best = dir;
-            }
-        }
-        return best;
-    }
-
     // ==================== COMBAT RANGE QUERIES ====================
 
     /**
      * Checks if two positions are adjacent (within attack range).
      * Attack range includes current cell and all 8 neighbors.
-     * 
+     *
      * @return true if positions are adjacent or same
      */
     public boolean isAdjacent(int row1, int col1, int row2, int col2) {
@@ -623,10 +562,10 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
     /**
      * Gets terrain bonus multipliers for a hero at their current position.
-     * 
+     *
      * This is the query-based approach: instead of modifying hero stats,
      * we return the multipliers and let the caller apply them.
-     * 
+     *
      * @param hero the hero
      * @return map of stat name to multiplier (e.g., "strength" -> 1.10)
      */
@@ -636,15 +575,15 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         if (pos == null) return bonus;
 
         Tile tile = getTile(pos[0], pos[1]);
-        
+
         double strMult = tile.getStrengthMultiplier();
         double dexMult = tile.getDexterityMultiplier();
         double agiMult = tile.getAgilityMultiplier();
-        
+
         if (strMult != 1.0) bonus.put("strength", strMult);
         if (dexMult != 1.0) bonus.put("dexterity", dexMult);
         if (agiMult != 1.0) bonus.put("agility", agiMult);
-        
+
         return bonus;
     }
 
@@ -735,11 +674,11 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
      */
     public void printMap() {
         ioUtils.printlnHeader(CYAN + "========== LEGENDS OF VALOR ==========");
-        
-        // Print column headers (5 chars + 1 for separator = 6 per column)
-        StringBuilder header = new StringBuilder("     ");
+
+        // Print column headers
+        StringBuilder header = new StringBuilder("    ");
         for (int col = 0; col < size; col++) {
-            header.append(String.format("  %d   ", col));
+            header.append(String.format(" %d  ", col));
         }
         ioUtils.printlnTitle(header.toString());
 
@@ -757,7 +696,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
             }
 
             ioUtils.printlnTitle(line.toString());
-            
+
             if (row < size - 1) {
                 printRowSeparator();
             }
@@ -794,30 +733,21 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         }
 
 
-        // Format: "H1TM1" (5 chars) where H1=hero, T=tile type, M1=monster
+        // Format: "XTY" where X=hero, T=tile type, Y=monster
         String tileSymbol = tile.getType().getSymbol();
         String colorCode = getTileColor(tile.getType());
-        
+
         StringBuilder content = new StringBuilder();
         content.append(colorCode);
-        
-        // Hero part (2 chars): "H1" or "  "
-        if (!heroChar.equals(" ")) {
-            content.append(heroChar); // "H1", "H2", "H3"
+
+        if (!heroChar.equals(" ") || !monsterChar.equals(" ")) {
+            content.append(heroChar.equals(" ") ? " " : heroChar.charAt(0));
+            content.append(tileSymbol);
+            content.append(monsterChar.equals(" ") ? " " : monsterChar.charAt(0));
         } else {
-            content.append("  ");
+            content.append(" ").append(tileSymbol).append(" ");
         }
-        
-        // Tile type (1 char)
-        content.append(tileSymbol);
-        
-        // Monster part (2 chars): "M1" or "  "
-        if (!monsterChar.equals(" ")) {
-            content.append(monsterChar); // "M1", "M2", "M3"
-        } else {
-            content.append("  ");
-        }
-        
+
         content.append(RESET);
         return content.toString();
     }
@@ -845,7 +775,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     private void printRowBorder() {
         StringBuilder border = new StringBuilder("   +");
         for (int col = 0; col < size; col++) {
-            border.append("-----+"); // 5 chars wide
+            border.append("---+");
         }
         ioUtils.printlnTitle(border.toString());
     }
@@ -853,7 +783,7 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     private void printRowSeparator() {
         StringBuilder separator = new StringBuilder("   +");
         for (int col = 0; col < size; col++) {
-            separator.append("-----+"); // 5 chars wide
+            separator.append("---+");
         }
         ioUtils.printlnTitle(separator.toString());
     }
@@ -985,7 +915,9 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         int numKoulou = (int) Math.round(totalLaneTiles * KOULOU_RATIO);
         int numObstacles = (int) Math.round(totalLaneTiles * OBSTACLE_RATIO);
         int numPlain = totalLaneTiles - numBush - numCave - numKoulou - numObstacles;
-        
+
+        // Heroes CAN move onto a monster tile (co-occupancy allowed per Dis.txt)
+        // Combat is handled via attack actions
         // Adds the different file types to a list that we can then shuffle
         addTileTypes(tileTypes, TileType.BUSH, numBush);
         addTileTypes(tileTypes, TileType.CAVE, numCave);
