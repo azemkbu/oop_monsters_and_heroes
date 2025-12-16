@@ -2,13 +2,17 @@ package game;
 
 import hero.Hero;
 import hero.Party;
-import utils.IOUtils;
-import utils.MessageUtils;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import utils.IOUtils;
+import utils.MessageUtils;
 
+
+/*
+* Creates the util file for creating a party for 
+* any game.
+ */
 public final class PartyFactoryUtil {
     private PartyFactoryUtil() {}
 

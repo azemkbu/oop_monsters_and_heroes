@@ -9,13 +9,17 @@ import game.GameFactory;
 import game.PartyFactoryUtil;
 import hero.Hero;
 import hero.Party;
+import java.util.List;
 import market.service.MarketFactory;
 import monster.MonsterFactory;
 import utils.GameConstants;
 import utils.IOUtils;
 import worldMap.MonstersAndHeroesWorldMap;
 
-import java.util.List;
+/*
+* Implementation of the Game Factory
+* this time for monsters and heroes
+*/
 
 public class MonstersAndHeroesGameFactory implements GameFactory {
 
