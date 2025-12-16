@@ -3,6 +3,7 @@ package battle.menu;
 import battle.enums.EquipChoice;
 import battle.enums.HeroActionType;
 import hero.Hero;
+import hero.Party;
 import market.model.item.*;
 import monster.Monster;
 import utils.IOUtils;
@@ -20,14 +21,28 @@ import static utils.ConsoleColors.GREEN;
 public class BattleMenuImpl implements BattleMenu {
 
     private final IOUtils ioUtils;
+    private final Party party; // Optional: for displaying hero indices in LoV
 
     public BattleMenuImpl(IOUtils ioUtils) {
+        this(ioUtils, null);
+    }
+
+    public BattleMenuImpl(IOUtils ioUtils, Party party) {
         this.ioUtils = ioUtils;
+        this.party = party;
     }
 
     @Override
     public HeroActionType chooseActionForHero(Hero hero, List<Monster> monsters) {
-        ioUtils.printlnSuccess(String.format(MessageUtils.CURRENT_TURN, hero.getName()));
+        // Display hero turn with index if party is available (Legends of Valor)
+        String heroLabel = hero.getName();
+        if (party != null) {
+            int heroIndex = party.getHeroes().indexOf(hero);
+            if (heroIndex >= 0) {
+                heroLabel = "[H" + (heroIndex + 1) + "] " + hero.getName();
+            }
+        }
+        ioUtils.printlnSuccess(String.format("=== %s's turn ===", heroLabel));
 
         List<HeroActionType> options = Arrays.asList(HeroActionType.values());
 

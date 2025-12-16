@@ -39,7 +39,7 @@ public class LegendsOfValorGameFactory implements GameFactory {
             worldMap.placeHeroAtNexus(party.getHeroes().get(lane), lane);
         }
 
-        BattleMenu battleMenu = new BattleMenuImpl(ioUtils);
+        BattleMenu battleMenu = new BattleMenuImpl(ioUtils, party); // Pass party for hero index display
         MonsterFactory monsterFactory = new MonsterFactory();
 
         return new LegendsOfValorGameImpl(worldMap, party, battleMenu, monsterFactory, ioUtils);
