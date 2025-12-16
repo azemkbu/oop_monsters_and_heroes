@@ -2,8 +2,8 @@
 -------------------------------------------------------------
 --------------
 - Name: Azem Kakitaeva, Zhengzheng Tang, Antony Ponomarev
-- Email: azemk@bu.edu, , antonyp@bu.edu
-- Student ID: U51216906, U43948985
+- Email: azemk@bu.edu, zztang@bu.edu, antonyp@bu.edu
+- Student ID: U51216906, U07312313, U43948985
 
 
 ## File Structure 
@@ -38,9 +38,10 @@
 /battle/heroAction/impl/lov
   LoVAttackAction.java           // Handles the hero attack specifically within Legends of Valor
   LoVCastSpellAction.java        // Handles the hero's ability to cast spells specifically within Legends of Valor
- MoveAction.java                 // Handles the hero's ability to move on the board in Legends of Valor
- RecallAction.java               // Handles the hero's ability to recall back to the nexus
- TeleportAction.java             // Handles the hero's ability to teleport to another hero
+  MoveAction.java                // Handles the hero's ability to move on the board in Legends of Valor
+  RecallAction.java              // Handles the hero's ability to recall back to the nexus
+  TeleportAction.java            // Handles the hero's ability to teleport to another hero
+  RemoveObstacle.java            // Handles the hero's ability to remove obstacles from the map
 
 /battle/heroAction/impl
   AttackAction.java              // Strategy implementing an attack action
@@ -128,7 +129,23 @@
   GameConstants.java             // Centralized constants for game 
   IOUtils.java                   // Utility interface for handling generic input/output operations
   MessageUtils.java              // Repository for centralized UI text messages
-  EndOfInputException            // Extends a normal RuntimeException so that user is prompted with a full stack trace.
+  EndOfInputException.java       // Custom exception for handling EOF gracefully
+  BGMPlayer.java                 // Background music player for in-game audio (WAV format)
+  RangeConstants.java            // Constants for attack ranges by hero class and monster type
+
+/ui/formatter
+  LegendsMapFormatter.java       // Block-style colored map renderer for Legends of Valor
+  LineKind.java                  // Enum for categorizing rendered line types
+  RenderedLine.java              // Data class for formatted console output lines
+  StatusBarRenderer.java         // Progress bar renderer using ASCII/Unicode characters
+  HeroStatusFormatter.java       // Formatter for hero status panels (HP/MP/equipment)
+  MonsterStatusFormatter.java    // Formatter for monster status panels (HP/stats)
+
+/combat
+  RangeCalculator.java           // Utility for calculating effective attack ranges
+
+/entity
+  GamePiece.java                 // Common interface for Hero and Monster positioning
 
 /worldMap/enums
   Direction.java                 // Enum representing movement directions on the world map
@@ -138,10 +155,11 @@
   MarketTileFeature.java         // Feature class marking a tile as containing a market
   Tile.java                      // Class representing a single grid cell of the world map
   TileFeature.java               // Abstract base class for map tile features
-  WorldMap.java                  // Extends the MonstersAndHeroesWorldMap.java to keep compatability with previous version.
+  WorldMap.java                  // Extends the MonstersAndHeroesWorldMap.java to keep compatibility with previous version
   MonstersAndHeroesWorldMap.java // Implementation of the world map for Monsters and Heroes
-  LegendsOfValorWorldMap.java    // Implements the world map for Legends of valor
+  LegendsOfValorWorldMap.java    // Implements the world map for Legends of Valor with 3-lane grid and entity management
   IWorldMap.java                 // General interface for creating world maps for different games
+  ILegendsWorldMap.java          // Extended interface for Legends of Valor specific map operations
 
 /worldMap/feature
   BushFeature.java               // Handles the bushes on the map, extends TerrainBonusFeature
@@ -182,8 +200,17 @@
     * The system supports easy localization, since all user-facing text is centralized in MessageUtils.
 
 
-* **Enhanced Console UI with Color Output**
-  The program uses `ConsoleColors` to create a visually appealing terminal interface.
+* **Enhanced Console UI with Color Output & Visual Formatting**
+  - Block-style colored cells (4 chars × 2 lines) for Legends of Valor map
+  - ANSI background colors distinguish different terrain types
+  - Progress bars (HP/MP) using Unicode characters (█░)
+  - Clear hero/monster identification (H1, H2, H3, M1, M2, M3)
+  - Professional formatting with battlefield headers and lane labels
+
+* **Background Music Support**
+  - Non-blocking audio playback using `BGMPlayer` on daemon thread
+  - Supports WAV format (BGM.wav)
+  - Gracefully handles missing audio files without affecting gameplay
 
 * **Centralized Game Rules & UI Messages**
 
@@ -197,19 +224,24 @@ This improves readability, explains design intent and makes the system easier to
 
 ## Steps to Run
 
-1. Download the `src` folder.
-2. Open terminal/command prompt and navigate to the folder:
+1. Download the `src` folder and `BGM.wav` (optional, for background music).
+2. Open terminal/command prompt and navigate to the project folder:
 ```bash
-cd ~/IdeaProjects/monstersAndHeroes
+cd path/to/oop_monsters_and_heroes
 ```
 3. Compile the code:
 ```bash
-javac -d out $(find src -name "*.java")
+javac -encoding UTF-8 -d out $(find src -name "*.java")
 ```
 4. Run the game:
 ```bash
 java -cp out Main
 ```
+
+**Note on Background Music:**
+- Place `BGM.wav` in the project root directory for in-game music
+- Java AudioSystem requires WAV format (MP3 is not supported)
+- If BGM file is missing, the game continues without music
 
 
 ## Game Flow
