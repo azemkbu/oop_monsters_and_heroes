@@ -177,7 +177,10 @@
 
 * **Use of Key Design Patterns**
 
-    * **Factory Pattern**: `MonsterFactory` loads template monsters from files and dynamically generates battle-ready monsters scaled to the party level.
+    * **Factory Pattern**:
+    *   `MonsterFactory` loads template monsters from files and dynamically generates battle-ready monsters scaled to the party level.
+    *   `LegendsOfValorGameFactory` and `MonstersAndHeroesGameFactory`: Concrete factory instances that create the specified game. They both implmenet the abstract interface: `GameFactory`
+    * **Abstract Factory Pattern**: `GameFactory` Interface for creating concrete factories for each unique game type.
     * **Strategy Pattern**: `HeroActionStrategy` encapsulates hero actions (attack, spell, potion, equip, skip) into separate strategy objects, making new actions easy to add.
     * **Command Pattern**: `MarketCommand` defines executable market actions (buy, sell, view info, leave) and allows clean, modular menu behavior.
 
