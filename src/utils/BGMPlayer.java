@@ -48,7 +48,12 @@ public final class BGMPlayer {
                 }
                 
             } catch (UnsupportedAudioFileException e) {
-                System.err.println("BGM format not supported. Continuing without music.");
+                System.err.println("╔════════════════════════════════════════════════════════════╗");
+                System.err.println("║  BGM FORMAT NOT SUPPORTED                                  ║");
+                System.err.println("║  Java AudioSystem only supports WAV, AU, AIFF formats.     ║");
+                System.err.println("║  Please convert BGM.mp3 to BGM.wav to enable music.        ║");
+                System.err.println("║  Game continues without music...                           ║");
+                System.err.println("╚════════════════════════════════════════════════════════════╝");
             } catch (IOException e) {
                 System.err.println("Could not read BGM file. Continuing without music.");
             } catch (LineUnavailableException e) {
