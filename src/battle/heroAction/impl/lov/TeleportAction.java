@@ -3,13 +3,12 @@ package battle.heroAction.impl.lov;
 import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
 import hero.Hero;
+import java.util.ArrayList;
+import java.util.List;
 import monster.Monster;
 import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.ILegendsWorldMap;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Teleport action for Legends of Valor
@@ -25,7 +24,7 @@ public class TeleportAction implements HeroActionStrategy {
     }
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ignored) {
@@ -33,16 +32,18 @@ public class TeleportAction implements HeroActionStrategy {
 
         Hero targetHero = chooseTeleportTarget(hero);
         if (targetHero == null) {
-            return;
+            return false;
         }
 
         boolean success = worldMap.teleportHero(hero, targetHero);
         if (!success) {
             io.printlnFail(MessageUtils.FAILED);
+            execute(hero, monsters,context,ignored);
         } else {
             io.printlnSuccess(String.format(MessageUtils.TELEPORT_SUCCESS, hero.getName(), targetHero.getName()));
             worldMap.printMap();
         }
+        return true;
     }
 
     private Hero chooseTeleportTarget(Hero currentHero) {

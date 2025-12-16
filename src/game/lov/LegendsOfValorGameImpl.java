@@ -156,8 +156,12 @@ public class LegendsOfValorGameImpl implements Game {
                 continue;
             }
 
-            strategy.execute(hero, aliveMonsters, context, io);
+            boolean turn = strategy.execute(hero, aliveMonsters, context, io);
             if (!running) return;
+
+            if(!turn){
+                runHeroesTurn(actions, context);
+            }
 
             cleanupDeadMonstersAndReward(hero);
 
@@ -215,7 +219,7 @@ public class LegendsOfValorGameImpl implements Game {
                 }
 
             }else{
-            worldMap.moveMonsterSouth(monster);
+                worldMap.moveMonsterSouth(monster);
             }
         }
 

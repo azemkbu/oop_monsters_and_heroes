@@ -3,13 +3,12 @@ package battle.heroAction.impl.lov;
 import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
 import hero.Hero;
+import java.util.List;
 import monster.Monster;
 import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.ILegendsWorldMap;
 import worldMap.enums.Direction;
-
-import java.util.List;
 
 public class MoveAction implements HeroActionStrategy {
 
@@ -22,7 +21,7 @@ public class MoveAction implements HeroActionStrategy {
     }
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ignored) {
@@ -32,16 +31,19 @@ public class MoveAction implements HeroActionStrategy {
         Direction direction = chooseMoveDirection(hero);
         if (direction == null) {
             io.printlnFail(MessageUtils.CANCELED);
-            return;
+            return false;
         }
         boolean moved = worldMap.moveHero(hero, direction);
 
         if (!moved) {
             io.printlnFail(String.format(MessageUtils.TRY_ANOTHER_DIRECTION, direction));
+            execute(hero, monsters, context, ignored);
         } else {
             io.printlnSuccess(String.format(MessageUtils.SUCCESS_MOVE, hero.getName(), direction));
             worldMap.printMap();
+            
         }
+        return true;
     }
 
 
@@ -72,6 +74,7 @@ public class MoveAction implements HeroActionStrategy {
                 case 'D':
                     return Direction.RIGHT;
                 case 'Q':
+
                     return null;
                 default:
                     io.printlnFail("Invalid input, please use W/A/S/D or Q.");

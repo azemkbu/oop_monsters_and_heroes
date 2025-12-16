@@ -1,21 +1,19 @@
 package battle.heroAction.impl;
 
-import battle.heroAction.BattleContext;
-import battle.menu.BattleMenu;
 import battle.enums.EquipChoice;
+import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
+import battle.menu.BattleMenu;
 import hero.Hero;
+import java.util.ArrayList;
+import java.util.List;
 import market.model.item.Armor;
 import market.model.item.Item;
 import market.model.item.ItemType;
 import market.model.item.Weapon;
-
 import monster.Monster;
 import utils.IOUtils;
 import utils.MessageUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -24,7 +22,7 @@ import java.util.List;
 public class EquipAction implements HeroActionStrategy {
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ioUtils) {
@@ -42,8 +40,10 @@ public class EquipAction implements HeroActionStrategy {
             case CANCEL:
             default:
                 ioUtils.printlnFail(MessageUtils.CANCELED);
+                execute(hero, monsters, context, ioUtils);
                 break;
         }
+        return true;
     }
 
     private void equipWeaponFromInventory(Hero hero, BattleMenu menu, IOUtils ioUtils) {

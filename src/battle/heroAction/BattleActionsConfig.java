@@ -6,10 +6,9 @@ import battle.heroAction.impl.UsePotionAction;
 import battle.heroAction.impl.lov.*;
 import battle.heroAction.impl.mh.MHAttackAction;
 import battle.heroAction.impl.mh.MhCastSpellAction;
+import game.GameType;
 import java.util.HashMap;
 import java.util.Map;
-
-import game.GameType;
 import utils.IOUtils;
 import worldMap.ILegendsWorldMap;
 import worldMap.IWorldMap;

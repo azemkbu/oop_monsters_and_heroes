@@ -1,18 +1,17 @@
 package battle.heroAction.impl;
 
 import battle.heroAction.BattleContext;
-import battle.menu.BattleMenu;
 import battle.heroAction.HeroActionStrategy;
+import battle.menu.BattleMenu;
 import hero.Hero;
+import java.util.ArrayList;
+import java.util.List;
 import market.model.item.Item;
 import market.model.item.ItemType;
 import market.model.item.Potion;
 import monster.Monster;
 import utils.IOUtils;
 import utils.MessageUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -21,7 +20,7 @@ import java.util.List;
 public class UsePotionAction implements HeroActionStrategy {
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ioUtils) {
@@ -37,14 +36,14 @@ public class UsePotionAction implements HeroActionStrategy {
 
         if (potions.isEmpty()) {
             ioUtils.printlnWarning(String.format(MessageUtils.NO_ITEM_TO_USE, ItemType.POTION.name()));
-            return;
+            return false;
         }
 
         Potion chosen = menu.choosePotionToUse(hero, potions);
 
         if (chosen == null) {
             ioUtils.printlnWarning(String.format(MessageUtils.NO_ITEM_SELECTED, ItemType.POTION));
-            return;
+            return false;
         }
 
         double amount = chosen.getEffectAmount();
@@ -74,5 +73,6 @@ public class UsePotionAction implements HeroActionStrategy {
                 (int) amount
         ));
         hero.getInventory().remove(chosen);
+        return true;
     }
 }

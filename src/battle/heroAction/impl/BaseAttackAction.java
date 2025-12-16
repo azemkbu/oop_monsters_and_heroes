@@ -4,15 +4,13 @@ import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
 import battle.menu.BattleMenu;
 import hero.Hero;
+import java.util.List;
 import market.model.item.Weapon;
 import monster.Monster;
 import utils.GameConstants;
+import static utils.GameConstants.HERO_ATTACK_MULTIPLIER;
 import utils.IOUtils;
 import utils.MessageUtils;
-
-import java.util.List;
-
-import static utils.GameConstants.HERO_ATTACK_MULTIPLIER;
 
 /**
  * Base implementation of the attack action during {@link Hero} turn
@@ -20,7 +18,7 @@ import static utils.GameConstants.HERO_ATTACK_MULTIPLIER;
 public abstract class BaseAttackAction implements HeroActionStrategy {
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ioUtils) {
@@ -31,14 +29,14 @@ public abstract class BaseAttackAction implements HeroActionStrategy {
 
         if (availableMonsters == null || availableMonsters.isEmpty()) {
             handleNoAvailableMonsters(hero, monsters, context, ioUtils);
-            return;
+            return false;
         }
 
         Monster monster = menu.chooseMonsterTarget(hero, availableMonsters);
 
         if (monster == null) {
             ioUtils.printlnWarning(MessageUtils.NO_MONSTER_SELECTED);
-            return;
+            return false;
         }
 
         Weapon weapon = hero.getEquippedWeapon();
@@ -47,7 +45,7 @@ public abstract class BaseAttackAction implements HeroActionStrategy {
 
         if (monster.dodgesAttack()) {
             ioUtils.printlnWarning(String.format(MessageUtils.ATTACK_WAS_DODGED, hero.getName(), monster.getName()));
-            return;
+            return true;
         }
 
 
@@ -71,6 +69,7 @@ public abstract class BaseAttackAction implements HeroActionStrategy {
         if (!monster.isAlive()) {
             ioUtils.printlnWarning(String.format(MessageUtils.CHARACTER_DEFEATED, monster.getName()));
         }
+        return true;
     }
 
     protected List<Monster> getAvailableMonsters(Hero hero,

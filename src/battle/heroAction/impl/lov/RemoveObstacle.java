@@ -22,7 +22,7 @@ public class RemoveObstacle implements HeroActionStrategy {
     }
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ignored) {
@@ -32,7 +32,7 @@ public class RemoveObstacle implements HeroActionStrategy {
         Direction direction = chooseRemoveDirection(hero);
         if (direction == null) {
             io.printlnFail(MessageUtils.CANCELED);
-            return;
+            return false;
         }
 
 
@@ -49,10 +49,12 @@ public class RemoveObstacle implements HeroActionStrategy {
 
         if (removed) {
             io.printlnFail(String.format(MessageUtils.TRY_ANOTHER_DIRECTION, direction));
+            execute(hero, monsters,context,ignored);
         } else {
             io.printlnSuccess(String.format(MessageUtils.SUCCESS_MOVE, hero.getName(), direction));
             worldMap.printMap();
         }
+        return true;
     }
 
 

@@ -4,6 +4,9 @@ import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
 import battle.menu.BattleMenu;
 import hero.Hero;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import market.model.item.Item;
 import market.model.item.ItemType;
 import market.model.item.Spell;
@@ -12,17 +15,13 @@ import utils.GameConstants;
 import utils.IOUtils;
 import utils.MessageUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
 /**
  * Base implementation of casting a spell
  */
 public abstract class BaseCastSpellAction implements HeroActionStrategy {
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ioUtils) {
@@ -38,33 +37,33 @@ public abstract class BaseCastSpellAction implements HeroActionStrategy {
 
         if (spells.isEmpty()) {
             ioUtils.printlnWarning(MessageUtils.NO_SPELLS);
-            return;
+            return false;
         }
 
         Spell chosen = menu.chooseSpellToCast(hero, spells);
 
         if (chosen == null) {
             ioUtils.printlnWarning(String.format(MessageUtils.NO_ITEM_SELECTED, ItemType.SPELL));
-            return;
+            return false;
         }
 
         if (hero.getMp() < chosen.getManaCost()) {
             ioUtils.printlnWarning(String.format(MessageUtils.NOT_ENOUGH_MP_TO_CAST_SPELL, hero.getName(), chosen.getName()));
-            return;
+            return false;
         }
 
         List<Monster> availableMonsters = getAvailableMonsters(hero, monsters, context);
 
         if (availableMonsters == null || availableMonsters.isEmpty()) {
             handleNoAvailableMonsters(hero, monsters, context, ioUtils);
-            return;
+            return false;
         }
 
         Monster monster = menu.chooseMonsterTarget(hero, availableMonsters);
 
         if (monster == null) {
             ioUtils.printlnWarning(MessageUtils.NO_MONSTER_SELECTED);
-            return;
+            return false;
         }
 
         hero.setMp(hero.getMp() - chosen.getManaCost());
@@ -90,6 +89,7 @@ public abstract class BaseCastSpellAction implements HeroActionStrategy {
                     calculateFinalDamage(hero, monster, chosen)
             ));
         }
+        return true;
     }
 
     /**

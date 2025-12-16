@@ -1,10 +1,9 @@
 package battle.heroAction;
 
 import hero.Hero;
+import java.util.List;
 import monster.Monster;
 import utils.IOUtils;
-
-import java.util.List;
 
 /**
  * Defines strategy for a hero's chosen action during their turn
@@ -19,7 +18,7 @@ public interface HeroActionStrategy {
      * @param context  shared battle context
      * @param ioUtils  IO abstraction for user interaction
      */
-    void execute(Hero hero,
+    boolean execute(Hero hero,
                  List<Monster> monsters,
                  BattleContext context,
                  IOUtils ioUtils);

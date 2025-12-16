@@ -3,12 +3,11 @@ package battle.heroAction.impl.lov;
 import battle.heroAction.BattleContext;
 import battle.heroAction.HeroActionStrategy;
 import hero.Hero;
+import java.util.List;
 import monster.Monster;
 import utils.IOUtils;
 import utils.MessageUtils;
 import worldMap.ILegendsWorldMap;
-
-import java.util.List;
 
 /**
  * Recall action for Legends of Valor
@@ -24,7 +23,7 @@ public class RecallAction implements HeroActionStrategy {
     }
 
     @Override
-    public void execute(Hero hero,
+    public boolean execute(Hero hero,
                         List<Monster> monsters,
                         BattleContext context,
                         IOUtils ignored) {
@@ -32,7 +31,8 @@ public class RecallAction implements HeroActionStrategy {
         int lane = worldMap.getHeroLane(hero);
         if (lane == -1) {
             io.printlnFail(MessageUtils.MSG_NO_LANE);
-            return;
+            execute(hero, monsters,context,ignored);
+            return false;
         }
 
         io.printlnSuccess(String.format(MessageUtils.MSG_RECALLING_FORMAT, hero.getName()));
@@ -47,5 +47,6 @@ public class RecallAction implements HeroActionStrategy {
                 hero.getName(), lane, row, col));
 
         worldMap.printMap();
+        return true;
     }
 }
