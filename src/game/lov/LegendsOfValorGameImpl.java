@@ -192,8 +192,32 @@ public class LegendsOfValorGameImpl implements Game {
                 }
             }
 
-            // 3. Fallback: just move south
+            // 3. Fallback: just move
+
+            //
+            // To handle monster moves, we check if the monster can move south
+            // In the case it cannot:
+            // 1) Will move laterally 
+            // 2) If there are two obstacles side by side, the monster will continually 
+            // left and right until a hero destroys an obstacle.
+            //
+
+            int row = monster.getRow();
+            int col = monster.getCol();
+            
+            if(!worldMap.isAccessible(row - 1, col)){
+                // The left most tiles are 0,3,6
+                if (col%3 == 0) {
+                    moveMonsterInDirection(monster, Direction.RIGHT);
+                }
+                // Otherwise, we will move left
+                else{
+                    moveMonsterInDirection(monster, Direction.LEFT);
+                }
+
+            }else{
             worldMap.moveMonsterSouth(monster);
+            }
         }
 
         // End-of-round recovery for alive heroes (keeps original feel)
