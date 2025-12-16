@@ -55,9 +55,9 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
     /** Different distributions of all the different type of tiles */
     public static final double BUSH_RATIO = 0.20;
     public static final double CAVE_RATIO = 0.20;
-    public static final double KOULOU_RATIO = 0.20;
-    public static final double PLAIN_RATIO = 0.30;
-    public static final double OBSTACLE_RATIO = 0.10;
+    public static final double KOULOU_RATIO = 0.2;
+    public static final double PLAIN_RATIO = 0.3;
+    public static final double OBSTACLE_RATIO = 0.1;
 
     private final int size;
     private final Tile[][] grid;
@@ -231,8 +231,12 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         int[] pos = heroPositions.get(hero);
         if (pos == null) return false;
 
+        int curRow = pos[0];
+        int curCol = pos[1];
+
         int newRow = pos[0] + direction.getRow();
         int newCol = pos[1] + direction.getCol();
+        
 
         // Check bounds and accessibility
         if (!isAccessible(newRow, newCol)) {
@@ -243,6 +247,14 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         if (getHeroAt(newRow, newCol) != null) {
             return false;
         }
+
+
+        if (direction == Direction.UP) {
+            if (wouldPassMonsterInLane(newRow, newCol) && getMonsterAt(newRow, newCol) == null) {
+                return false;
+            }
+        }
+
 
         // Heroes CAN move onto a monster tile (co-occupancy allowed per Dis.txt)
 
@@ -382,6 +394,31 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
         }
         return null;
     }
+
+
+    // Check to see if a move will pass a monster
+    private boolean wouldPassMonsterInLane(int newRow, int newCol) {
+    int lane = getLaneIndex(newCol);
+    if (lane == -1) return false;
+
+    int[] laneCols = LANE_COLUMNS[lane];
+
+    for (Monster m : getAliveMonsters()) {
+        int[] mp = monsterPositions.get(m);
+        if (mp == null) continue;
+
+        boolean sameLane = (mp[1] == laneCols[0] || mp[1] == laneCols[1]);
+        if (!sameLane) continue;
+
+        // If hero would be north of the monster, that's "past" it (illegal)
+        if (newRow < mp[0]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 
     /**
      * Gets all monsters.
