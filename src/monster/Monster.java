@@ -45,6 +45,14 @@ public abstract class Monster implements GamePiece {
 
     protected abstract Set<MonsterAttribute> getFavoredAttributes();
 
+    /**
+     * Gets the base attack range for this monster type (in tiles).
+     * Subclasses override to define their range.
+     * Default is 1 (melee range).
+     */
+    public int getBaseAttackRange() {
+        return 1;
+    }
 
     protected boolean isDamageFavored() {
         return getFavoredAttributes().contains(MonsterAttribute.DAMAGE);
@@ -140,6 +148,10 @@ public abstract class Monster implements GamePiece {
 
     public int getHp() {
         return hp;
+    }
+
+    public int getMaxHp() {
+        return level * HERO_HP_PER_LEVEL;
     }
 
     public int getDefense() {
