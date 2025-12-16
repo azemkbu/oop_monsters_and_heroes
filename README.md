@@ -225,6 +225,91 @@ The entire codebase includes detailed JavaDoc for classes, interfaces, methods, 
 This improves readability, explains design intent and makes the system easier to maintain and extend. 
 
 
+## Object-Oriented Design in Legends of Valor
+
+### Core OOP Principles
+
+#### 1. Encapsulation
+- **Private data members** with public getters/setters (e.g., `Hero.hp`, `Monster.baseDamage`)
+- **Internal state protection**: `LegendsOfValorWorldMap` encapsulates position tracking in private `Map<Hero, int[]>` and `Map<Monster, int[]>`
+- **Data hiding**: Tile terrain bonuses are queried via methods, not exposed as public fields
+- **Access control**: `GamePiece` interface exposes only necessary position methods, hiding implementation details
+
+#### 2. Inheritance
+- **Abstract base classes**: `Hero`, `Monster`, `Item`, `TerrainBonusFeature`
+- **Concrete subclasses**: 
+  - Hero types: `Warrior`, `Sorcerer`, `Paladin` extend `Hero`
+  - Monster types: `Dragon`, `Spirit`, `Exoskeleton` extend `Monster`
+  - Terrain features: `BushFeature`, `CaveFeature`, `KoulouFeature` extend `TerrainBonusFeature`
+- **Code reuse**: Common behavior (level-up, damage calculation) implemented once in base class
+- **Specialization**: Subclasses override `getFavoredSkills()` and `getFavoredAttributes()` to customize behavior
+
+#### 3. Polymorphism
+- **Interface-based**: `GamePiece` allows `LegendsOfValorWorldMap` to treat `Hero` and `Monster` uniformly
+- **Runtime polymorphism**: `HeroActionStrategy` interface enables different action behaviors via `execute()` method
+- **Substitutability**: Any `TileFeature` subclass can be attached to a `Tile` and provide terrain bonuses
+- **Factory returns interfaces**: `GameFactory.createGame()` returns `Game` interface, hiding concrete implementations
+
+---
+
+### Design Patterns Applied
+
+#### Strategy Pattern
+**Used in**: Hero actions during battle
+- **Context**: `LegendsOfValorGameImpl` needs to execute various hero actions
+- **Strategy Interface**: `HeroActionStrategy` with `execute()` method
+- **Concrete Strategies**: `MoveAction`, `TeleportAction`, `RecallAction`, `LoVAttackAction`, `RemoveObstacle`
+- **Configuration**: `BattleActionsConfig` maps `HeroActionType` enum to strategies
+- **Benefit**: Adding new actions (e.g., `RemoveObstacle`) requires only a new strategy class, no modification to existing code
+
+#### Factory Pattern
+**Used in**: Monster creation and game initialization
+- **MonsterFactory**: Loads monster templates from files and generates battle-ready instances scaled to party level
+- **Purpose**: Separates monster creation logic from monster behavior
+- **Benefit**: Centralized monster instantiation, easy to adjust spawning rules
+
+#### Abstract Factory Pattern
+**Used in**: Game mode creation
+- **Abstract Factory**: `GameFactory` interface with `createGame()` method
+- **Concrete Factories**: 
+  - `LegendsOfValorGameFactory` creates LOV game with 3-lane map
+  - `MonstersAndHeroesGameFactory` creates MH game with random exploration map
+- **Benefit**: GameLauncher doesn't need to know game-specific construction details, just calls factory
+
+#### Decorator Pattern
+**Used in**: Tile features for terrain effects
+- **Component**: `Tile` class
+- **Decorator**: `TileFeature` abstract class
+- **Concrete Decorators**: `NexusFeature`, `BushFeature`, `CaveFeature`, `KoulouFeature`
+- **Enhancement**: Features add behavior (market access, stat bonuses) to tiles without modifying Tile class
+- **Benefit**: Tiles can have multiple features attached dynamically
+
+#### Template Method Pattern
+**Used in**: Hero and Monster base classes
+- **Template Class**: `Hero` abstract class
+- **Template Method**: `levelUp()` calls abstract `getFavoredSkills()` to determine which stats to boost
+- **Hook Methods**: 
+  - `Hero.getFavoredSkills()` - overridden by Warrior/Sorcerer/Paladin
+  - `Monster.getFavoredAttributes()` - overridden by Dragon/Spirit/Exoskeleton
+- **Benefit**: Common level-up logic in one place, subclasses only define their specialization
+
+#### Composition Over Inheritance
+**Used in**: NexusFeature and Market relationship
+- **Instead of**: `NexusFeature extends Market` (tight coupling)
+- **We use**: `NexusFeature` has a `Market` field (composition)
+- **Benefit**: NexusFeature can change Market implementation, avoid deep inheritance hierarchies
+
+---
+
+### SOLID Principles Demonstrated
+
+- **Single Responsibility**: `LegendsMapFormatter` only renders maps, `LegendsOfValorGameImpl` only orchestrates game loop
+- **Open-Closed**: New hero actions can be added without modifying existing strategy classes
+- **Liskov Substitution**: Any `Hero` subclass can replace `Hero` in game logic
+- **Interface Segregation**: `GamePiece` defines only essential methods (position, alive status)
+- **Dependency Inversion**: `LegendsOfValorGameImpl` depends on `BattleMenu` interface, not `BattleMenuImpl` concrete class
+
+
 ## Steps to Run
 
 1. Download the `src` folder and `BGM.wav` (optional, for background music).
@@ -259,3 +344,11 @@ java -cp out Main
 | Screen 7                                       | Screen 8                                       | Screen 9                                       |
 |------------------------------------------------|------------------------------------------------|------------------------------------------------|
 | <img src="gameFlow/Screen_7.png" width="300"/> | <img src="gameFlow/Screen_8.png" width="300"/> | <img src="gameFlow/Screen_9.png" width="300"/> |
+
+| Screen 10                                       | Screen 11                                       | Screen 12                                       |
+|------------------------------------------------|------------------------------------------------|------------------------------------------------|
+| <img src="gameFlow/Screen_10.png" width="300"/> | <img src="gameFlow/Screen_11.png" width="300"/> | <img src="gameFlow/Screen_12.png" width="300"/> |
+
+| Screen 13                                       | Screen 14                                       |
+|------------------------------------------------|------------------------------------------------|
+| <img src="gameFlow/Screen_13.png" width="300"/> | <img src="gameFlow/Screen_14.png" width="300"/> |
