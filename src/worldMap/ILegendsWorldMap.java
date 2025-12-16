@@ -1,6 +1,7 @@
 package worldMap;
 
 import hero.Hero;
+import monster.Monster;
 import java.util.List;
 import worldMap.enums.Direction;
 
@@ -25,4 +26,8 @@ public interface ILegendsWorldMap extends IWorldMap {
     int[] getHeroPosition(Hero hero);
 
     List<Hero> getHeroes();
+
+    List<Monster> getMonsters();
+
+    int[] getMonsterPosition(Monster monster);
 }

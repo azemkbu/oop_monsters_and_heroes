@@ -769,8 +769,32 @@ public class LegendsOfValorWorldMap implements ILegendsWorldMap {
 
     /**
      * Prints the map showing heroes and monsters positions.
+     * Uses LegendsMapFormatter for block-style colored cells.
      */
     public void printMap() {
+        ui.formatter.LegendsMapFormatter formatter = new ui.formatter.LegendsMapFormatter();
+        List<ui.formatter.RenderedLine> lines = formatter.render(this);
+        
+        for (ui.formatter.RenderedLine line : lines) {
+            switch (line.getKind()) {
+                case HEADER:
+                    ioUtils.printlnHeader(line.getText());
+                    break;
+                case TITLE:
+                    ioUtils.printlnTitle(line.getText());
+                    break;
+                default:
+                    ioUtils.printlnTitle(line.getText());
+                    break;
+            }
+        }
+        return;
+    }
+
+    /**
+     * OLD printMap implementation (kept for reference, not used).
+     */
+    private void printMap_old() {
         ioUtils.printlnHeader(CYAN + "========== LEGENDS OF VALOR ==========");
 
         // Print column headers (5 chars + 1 for separator = 6 per column)
