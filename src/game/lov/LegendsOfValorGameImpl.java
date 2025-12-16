@@ -332,7 +332,7 @@ public class LegendsOfValorGameImpl implements Game {
         io.printPrompt("Press ENTER to continue, or Q to quit: ");
         String line = io.readLine();
         String trimmed = line.trim();
-        return !trimmed.isEmpty() && (trimmed.equalsIgnoreCase("q"));
+        return (trimmed.equalsIgnoreCase("q"));
     }
 }
 
