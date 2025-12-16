@@ -208,7 +208,7 @@ public class LegendsOfValorGameImpl implements Game {
             int row = monster.getRow();
             int col = monster.getCol();
             
-            if(!worldMap.isAccessible(row - 1, col)){
+            if(!worldMap.isAccessible(row + 1, col)){  // Check south (row + 1), not north (row - 1)
                 // The left most tiles are 0,3,6
                 if (col%3 == 0) {
                     moveMonsterInDirection(monster, Direction.RIGHT);
